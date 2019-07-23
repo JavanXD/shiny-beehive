@@ -21,3 +21,8 @@ cor(daten[,c("weight", "temp1", "temp2", "hum1", "ticks")])
 
 ggplot(daten)+geom_point(aes(x=ticks,y=temp1, col=as.factor(weight)))
 #as.factor(weight) # disketre variable
+
+# differenz
+td<-diff(daten$ticks)
+td<-diff(daten$ticks[order(daten$ticks)])
+ggplot()+geom_point(aes(x=daten$ticks[-1],y=dt))
