@@ -1,47 +1,42 @@
-#install.packages("shiny")
-#install.packages("weatherData")
 library(shiny)
-library(weatherData)
 
 shinyUI(fluidPage(
   
   # Application title
-  title="Weather App!",
-  fluidRow(
-    
-    column(2,
-           h4("World Wide Weather"),
-           wellPanel(
-             dateInput(inputId = 'date',
-                       label = 'Select Date',
-                       value = Sys.Date()
-             ),
-             selectInput("select", label = h3("Select Location"), 
-                         choices = list("New York" = "NYC", "San Francisco" = "SFO", "London" = "LON")),
-             selectInput("year", label = h3("Select Year"), 
-                         choices = list("2016" = 2016, "2015" = 2015, "2014" = 2014), 
-                         selected = 1)
-           )
-           ),
-    column(10,
-           mainPanel("Daily Weather Details over Selected Date",
-                     tabsetPanel(
-                       tabPanel("Temperature", plotOutput("p1")), 
-                       tabPanel("Humidity", plotOutput("p2")), 
-                       tabPanel("Wind Speed", plotOutput("p3"))
-                     )
-           )
+  titlePanel("Bienenstand Shiny App"),
+
+  sidebarLayout(
+    sidebarPanel(
+       sliderInput("x_min",
+                   "Smallest Number in graphic",
+                   min = 0,
+                   max = 50,
+                   value = 5),
+       sliderInput("x_max",
+                   "Largest Number in graphic",
+                   min = 0,
+                   max = 50,
+                   value = 45),
+       sliderInput("num_cyl",
+                   "Choose Number of Cylinders",
+                   min=4,
+                   max=8,
+                   step=2,
+                   value=c(4,8)),
+       dateRangeInput("daterange", 
+                      "Date range:",
+                      start  = "2018/01/01",
+                      end    = "2019/07/01",
+                      min    = "2016/01/01",
+                      max    = "2024/12/31",
+                      format = "yy/mm/dd",
+                      separator = " bis ")
     ),
-    column(10,offset=2,
-             tabsetPanel("Annual Weather Details",
-             tabPanel("Mean Temperature", plotOutput("plot1")), 
-             tabPanel("Minimum Temperature", plotOutput("plot2")), 
-             tabPanel("Maximum Temperature", plotOutput("plot3"))
-           )   ) 
+    mainPanel(tabsetPanel(
+      tabPanel("Tabelle der Daten", dataTableOutput("tabelle")),
+      tabPanel("Histogramm Gewicht", plotOutput("distPlot")),
+      tabPanel("Summary", dataTableOutput("summary")),
+      tabPanel("Cor", textOutput("cor"))
+    ))
   )
-          
-    
-  )
-  
-  
-)
+))

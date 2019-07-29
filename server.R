@@ -1,56 +1,51 @@
-#install.packages('weatherData')
-#install.packages("geonames")
 library(shiny)
 library(ggplot2)
-library(weatherData)
+library(readr)
 
-# Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
-  wdate<-reactive({
-    #GNfindNearbyPlaceName(input$lat, input$lon, radius = "", maxRows = "1", style = "MEDIUM")  
-    getWeatherForDate(input$select, input$date,opt_all_columns = TRUE)
+  # import csv and skip unnecessary columns, set timeformat
+  beehive_data <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
+                                                      timestamp = col_datetime(format = "%Y/%m/%d %H:%M:%S"), 
+                                                      x5 = col_skip(),
+                                                      x7 = col_skip(),
+                                                      x8 = col_skip()))
+  # berechne differenzen zwischen reihen
+  delta_weight <- diff(beehive_data$weight[order(beehive_data$ticks)])
+  delta_temp1 <- diff(beehive_data$temp1[order(beehive_data$ticks)])
+  delta_temp2 <- diff(beehive_data$temp2[order(beehive_data$ticks)])
+  delta_hum1 <- diff(beehive_data$hum1[order(beehive_data$ticks)])
+  # delete first row
+  beehive_data = beehive_data[-1,] 
+  beehive_data$delta_weight <- delta_weight
+  beehive_data$delta_temp1 <- delta_temp1
+  beehive_data$delta_temp2 <- delta_temp2
+  beehive_data$delta_hum1 <- delta_hum1
   
-  })
-  cDate<-reactive({
-    getCurrentTemperature(input$select, input$date,opt_all_columns = TRUE)
-    
-  })
-  output$plot1<- renderPlot({
-    wdata<-getWeatherForYear(input$select, input$year, opt_detailed = FALSE, opt_write_to_file = FALSE) 
-    a<-ggplot(wdata, aes(x=wdata$Date,y=wdata$Mean_TemperatureF)) +ggtitle(paste("Mean Temperature over",input$year)) +
-      labs(x="Year",y="Mean. Temperature") +  geom_bar(stat='identity',fill="green")
-    print(a)
-  })
-  output$plot2<- renderPlot({
-    wdata<-getWeatherForYear(input$select, input$year, opt_detailed = FALSE, opt_write_to_file = FALSE) 
-    a<-ggplot(wdata, aes(x=wdata$Date,y=wdata$Min_TemperatureF)) + ggtitle(paste("Minimum Temperature over",input$year)) +
-      labs(x="Year",y="Min. Temperature") + geom_bar(stat='identity', fill="steelblue")
-    print(a)
-  })
-  output$plot3<- renderPlot({
-    wdata<-getWeatherForYear(input$select, input$year, opt_detailed = FALSE, opt_write_to_file = FALSE) 
-    a<-ggplot(wdata, aes(x=wdata$Date,y=wdata$Max_TemperatureF))+ggtitle(paste("Maximum Temperature over",input$year)) +
-      labs(x="Year",y="Max. Temperature") +  geom_bar(stat='identity',fill="orange")
-    print(a)
-  })
-  output$p1 <- renderPlot({ 
-    wc_df<-getDetailedWeather(input$select, input$date, opt_all_columns = TRUE)
-    b<-ggplot(wc_df, aes(x=wc_df$Time,y=wc_df$TemperatureF, group=1))+geom_point()+geom_line(color="red4",size=2)+ggtitle(paste("Weather in ",input$select," on",input$date))+labs(x="Time",y="Temperature (F)")+ coord_cartesian(ylim = c(-20, 80))
-    print(b)
-  })
-  output$p2<- renderPlot({ 
-    wc_df<-getDetailedWeather(input$select, input$date, opt_all_columns = TRUE)
-    b<-ggplot(wc_df, aes(x=wc_df$Time,y=wc_df$Humidity, group=1))+geom_point()+geom_line(color="royalblue2",size=2)+ggtitle(paste("Weather in ",input$select," on",input$date))+labs(x="Time",y="Humidity")+ coord_cartesian(ylim = c(0, 100))
-    print(b)
-  })
-  output$p3 <- renderPlot({ 
-    wc_df<-getDetailedWeather(input$select, input$date, opt_all_columns = TRUE)
-    b<-ggplot(wc_df, aes(x=wc_df$Time,y=wc_df$Wind_SpeedMPH, group=1))+geom_point()+geom_line(color="springgreen",size=2)+ggtitle(paste("Weather in ",input$select," on",input$date))+labs(x="Time",y="Wind Speed (MPH)")
-    print(b)
-  })
-  
-  
-  
+  # test datas
+  View(beehive_data)
+  summary(beehive_data)
+  cor(beehive_data[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1")])
 
+  zu_plotten <- reactive({
+    date_start_date <- as.Date(input$daterange[1], origin = "1970/01/01")
+    date_end_date <- as.Date(input$daterange[2], origin = "1970/01/01")
+    subset(beehive_data)
+  })
+  
+  output$distPlot <- renderPlot({
+    ggplot(beehive_data)+geom_histogram(aes(weight))
+    #ggplot(beehive_data)+geom_point(aes(x=weight,y=temp1))+xlim(input$x_min,input$x_max)
+  })
+  
+  output$tabelle <- renderDataTable({
+    zu_plotten()
+  })
+  output$summary <- renderDataTable({
+    summary(beehive_data)
+  })
+  
+  output$cor <- renderText({
+    cor(beehive_data[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1")], use = "complete.obs")
+  })
 })
