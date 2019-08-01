@@ -1,6 +1,7 @@
 library(shiny)
 library(ggplot2)
 library(readr)
+library(corrplot)
 
 shinyServer(function(input, output) {
   
@@ -16,21 +17,22 @@ shinyServer(function(input, output) {
   delta_temp1 <- diff(beehive_data$temp1[order(beehive_data$ticks)])
   delta_temp2 <- diff(beehive_data$temp2[order(beehive_data$ticks)])
   delta_hum1 <- diff(beehive_data$hum1[order(beehive_data$ticks)])
+  delta_hum2 <- diff(beehive_data$hum2[order(beehive_data$ticks)])
   # delete first row
   beehive_data = beehive_data[-1,] 
   beehive_data$delta_weight <- delta_weight
   beehive_data$delta_temp1 <- delta_temp1
   beehive_data$delta_temp2 <- delta_temp2
   beehive_data$delta_hum1 <- delta_hum1
+  beehive_data$delta_hum2 <- delta_hum2
   
   ######## Test
   View(beehive_data)
   summary(beehive_data)
-  # Korrelation berchnen
-  cor(beehive_data[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1")])
-  
-  
-  
+  # Korrelation berechnen
+  correlation <- cor(beehive_data[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1", "delta_hum2")])
+  # Korrelation visualisieren
+  correlationvisual <- corrplot(correlation)
   
   # function for daterange
   zu_plotten <- reactive({
@@ -50,11 +52,11 @@ shinyServer(function(input, output) {
   output$summary <- renderDataTable({
     summary(beehive_data)
   })
-  output$cor <- renderText({
-    cor(beehive_data[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1")], use = "complete.obs")
+  output$cor <- renderImage({
+    correlationvisual
   })
   
-  # Download Funktionlität
+  # Download Funktionalität
   output$downloadData <- downloadHandler(
     filename = function() {
     paste('data-', Sys.Date(), '.csv', sep='')
