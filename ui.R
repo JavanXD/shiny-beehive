@@ -14,7 +14,9 @@ shinyUI(fluidPage(
                       min    = "2016/01/01",
                       max    = "2024/12/31",
                       format = "yy/mm/dd",
-                      separator = " bis ")
+                      separator = " bis "),
+       
+       downloadButton('downloadData', 'Download')
     ),
     mainPanel(tabsetPanel(
       tabPanel("Tabelle der Daten", dataTableOutput("tabelle")),
@@ -22,5 +24,6 @@ shinyUI(fluidPage(
       tabPanel("Summary", dataTableOutput("summary")),
       tabPanel("Cor", textOutput("cor"))
     ))
+    
   )
 ))

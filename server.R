@@ -53,4 +53,15 @@ shinyServer(function(input, output) {
   output$cor <- renderText({
     cor(beehive_data[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1")], use = "complete.obs")
   })
+  
+  # Download Funktionlität
+  output$downloadData <- downloadHandler(
+    filename = function() {
+    paste('data-', Sys.Date(), '.csv', sep='')
+    },
+    content = function(con) {
+    write.csv2(beehive_data, con)
+    }
+  )
+  
 })
