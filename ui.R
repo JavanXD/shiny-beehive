@@ -17,7 +17,8 @@ shinyUI(fluidPage(
                       format = "yy/mm/dd",
                       separator = " bis "),
        
-      downloadButton('downloadData', 'Download'),
+      
+      downloadButton('downloadData', 'Download Data'),
       br(),
       # adding the new div tag to the sidebar            
       tags$div(
@@ -32,6 +33,7 @@ shinyUI(fluidPage(
       tabPanel("Histogramm Gewicht", plotOutput("distPlot")),
       tabPanel("Summary", dataTableOutput("summary")),
       tabPanel("Corr", textOutput("cor")),
+      tabPanel("Exmaple", plotOutput("firsttry")),
       tabPanel("About", uiOutput("about"))
     ))
     

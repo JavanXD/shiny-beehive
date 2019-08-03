@@ -55,11 +55,22 @@ shinyServer(function(input, output) {
   output$cor <- renderText({
     correlation
   })
+  output$firsttry <- renderPlot({
+    firsttry
+  })
   output$about <- renderUI({
     tags$div(
       br(),
       tags$h1("About"),
-      "Los geht's mit der Bienen Shiny AppLorem ipsum dolor sit amet mata sanctus est Lorem ipsum dolor sit amet",
+      "Fragestellungen die beantwortet werden sollen:",
+      br(),
+      "Zusammenhang zwischen Temperatur und Honigproduktion / Ertrag",
+      br(),
+      "Darstellen an welchen Tagen der Imker da war und Honig entnommen hat?",
+      br(),
+      "Darstellen an welchen Tagen es geregnet hat und kein Honig gesammelt wurde?",
+      tags$h2("Data"),
+      "Beschreibung woher die Daten kommen",
       tags$h2("Summary"),
       "Zeigt die Summary Funktion",
       tags$h2("Corr"),
@@ -76,5 +87,12 @@ shinyServer(function(input, output) {
     write.csv2(beehive_data, con)
     }
   )
+  
+  # Daniel erster Versuch. Zusammenhang nicht gut
+  firsttry = ggplot(beehive_data, aes(x = temp1, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
+    labs(title = "Vorlage GEOM Daniel", 
+         subtitle = "Erster Versuch", 
+         x = "Außentemperatur in Celsius", y = "Gewichtsdifferenz zum Vortag"
+    )
   
 })
