@@ -52,8 +52,19 @@ shinyServer(function(input, output) {
   output$summary <- renderDataTable({
     summary(beehive_data)
   })
-  output$cor <- renderImage({
-    correlationvisual
+  output$cor <- renderText({
+    correlation
+  })
+  output$about <- renderUI({
+    tags$div(
+      br(),
+      tags$h1("About"),
+      "Los geht's mit der Bienen Shiny AppLorem ipsum dolor sit amet mata sanctus est Lorem ipsum dolor sit amet",
+      tags$h2("Summary"),
+      "Zeigt die Summary Funktion",
+      tags$h2("Corr"),
+      "Zeigt die Korrelation"
+      )
   })
   
   # Download Funktionalität

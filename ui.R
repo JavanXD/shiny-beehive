@@ -20,9 +20,9 @@ shinyUI(fluidPage(
       downloadButton('downloadData', 'Download'),
       br(),
       # adding the new div tag to the sidebar            
-      tags$div(tags$p("Los geht's mit der Bienen Shiny AppLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, 
-                      no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet 
-                      clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet")),
+      tags$div(
+        br(),
+        tags$p("Javan Rasokat, Daniel Böhm (76477) - Master ISM")),
                
       img(src="bee_small.jpg")
       
@@ -31,7 +31,8 @@ shinyUI(fluidPage(
       tabPanel("Data", dataTableOutput("tabelle")),
       tabPanel("Histogramm Gewicht", plotOutput("distPlot")),
       tabPanel("Summary", dataTableOutput("summary")),
-      tabPanel("Corrplot", imageOutput("cor"))
+      tabPanel("Corr", textOutput("cor")),
+      tabPanel("About", uiOutput("about"))
     ))
     
     
