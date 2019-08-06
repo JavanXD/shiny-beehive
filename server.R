@@ -2,55 +2,91 @@ library(shiny)
 library(ggplot2)
 library(readr)
 library(corrplot)
+library(dplyr)
+library(lubridate)
 
 shinyServer(function(input, output) {
   
-  ##### Daten aufbereiten
+  # Daten aufbereiten ----
   # import csv and skip unnecessary columns, set timeformat
-  beehive_data <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
+  beehive_df <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
                                                       timestamp = col_datetime(format = "%Y/%m/%d %H:%M:%S"), 
                                                       x5 = col_skip(),
                                                       x7 = col_skip(),
                                                       x8 = col_skip()))
-  # berechne differenzen zwischen reihen
-  delta_weight <- diff(beehive_data$weight[order(beehive_data$ticks)])
-  delta_temp1 <- diff(beehive_data$temp1[order(beehive_data$ticks)])
-  delta_temp2 <- diff(beehive_data$temp2[order(beehive_data$ticks)])
-  delta_hum1 <- diff(beehive_data$hum1[order(beehive_data$ticks)])
-  delta_hum2 <- diff(beehive_data$hum2[order(beehive_data$ticks)])
-  # delete first row
-  beehive_data = beehive_data[-1,] 
-  beehive_data$delta_weight <- delta_weight
-  beehive_data$delta_temp1 <- delta_temp1
-  beehive_data$delta_temp2 <- delta_temp2
-  beehive_data$delta_hum1 <- delta_hum1
-  beehive_data$delta_hum2 <- delta_hum2
   
-  ######## Test
-  View(beehive_data)
-  summary(beehive_data)
+  # berechne differenzen zwischen reihen
+  delta_weight <- diff(beehive_df$weight[order(beehive_df$ticks)])
+  delta_temp1 <- diff(beehive_df$temp1[order(beehive_df$ticks)])
+  delta_temp2 <- diff(beehive_df$temp2[order(beehive_df$ticks)])
+  delta_hum1 <- diff(beehive_df$hum1[order(beehive_df$ticks)])
+  delta_hum2 <- diff(beehive_df$hum2[order(beehive_df$ticks)])
+  # delete first row
+  beehive_df = beehive_df[-1,] 
+  beehive_df$delta_weight <- delta_weight
+  beehive_df$delta_temp1 <- delta_temp1
+  beehive_df$delta_temp2 <- delta_temp2
+  beehive_df$delta_hum1 <- delta_hum1
+  beehive_df$delta_hum2 <- delta_hum2
+  
+  # Test Zeug ----
+  #View(beehive_df)
+  #summary(beehive_df)
+  
+  # Plots ----
   # Korrelation berechnen
-  correlation <- cor(beehive_data[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1", "delta_hum2")])
+  correlation <- cor(beehive_df[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1", "delta_hum2")])
   # Korrelation visualisieren
   correlationvisual <- corrplot(correlation)
+  # Daniel erster Versuch. Zusammenhang nicht gut
+  firsttry = ggplot(beehive_df, aes(x = temp1, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
+    labs(title = "Vorlage GEOM Daniel", 
+         subtitle = "Erster Versuch", 
+         x = "Außentemperatur in Celsius", y = "Gewichtsdifferenz zum Vortag"
+    )
   
-  # function for daterange
+  # Reactive function ----
   zu_plotten <- reactive({
+    
+    # Read file ----
+    if (!is.null(input$fileuploadFile)) {
+      # Wenn ein File ausgewählt wurde, dann nehme das File
+      beehive_df <- read.csv(input$fileuploadFile$datapath,
+                             header = input$fileuploadHeader,
+                             sep = input$fileuploadSep)
+    } else {
+      # Per default behalte den dataframe
+      beehive_df <- beehive_df
+    }
+    
+    # Filter Daterange ----
     date_start_date <- as.Date(input$daterange[1], origin = "1970/01/01")
     date_end_date <- as.Date(input$daterange[2], origin = "1970/01/01")
-    subset(beehive_data)
+    beehive_df <- subset(beehive_df)
+    
+    # Filter Datenmengen ----
+    if (input$filterhours == TRUE) {
+      beehive_df <- beehive_df %>% 
+               mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), hr = hour(timestamp)) %>% 
+               group_by(dt, hr) %>% 
+               filter(Date == min(Date)) %>% 
+               ungroup()
+    } else {
+      beehive_df <- beehive_df
+    }
+    
   })
   
-  ####### Tabs definieren
+  ####### Tabs definieren (Outputs)
   output$distPlot <- renderPlot({
-    ggplot(beehive_data)+geom_histogram(aes(weight))
-    #ggplot(beehive_data)+geom_point(aes(x=weight,y=temp1))+xlim(input$x_min,input$x_max)
+    ggplot(beehive_df)+geom_histogram(aes(weight))
+    #ggplot(beehive_df)+geom_point(aes(x=weight,y=temp1))+xlim(input$x_min,input$x_max)
   })
   output$tabelle <- renderDataTable({
     zu_plotten()
   })
   output$summary <- renderDataTable({
-    summary(beehive_data)
+    summary(beehive_df)
   })
   output$cor <- renderText({
     correlation
@@ -77,22 +113,14 @@ shinyServer(function(input, output) {
       "Zeigt die Korrelation"
       )
   })
-  
-  # Download Funktionalität
+  # Download Funktionalität 
   output$downloadData <- downloadHandler(
     filename = function() {
-    paste('data-', Sys.Date(), '.csv', sep='')
+      paste('data-', Sys.Date(), '.csv', sep='')
     },
     content = function(con) {
-    write.csv2(beehive_data, con)
+      write.csv2(beehive_df, con)
     }
   )
-  
-  # Daniel erster Versuch. Zusammenhang nicht gut
-  firsttry = ggplot(beehive_data, aes(x = temp1, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
-    labs(title = "Vorlage GEOM Daniel", 
-         subtitle = "Erster Versuch", 
-         x = "Außentemperatur in Celsius", y = "Gewichtsdifferenz zum Vortag"
-    )
   
 })
