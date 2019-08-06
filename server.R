@@ -1,7 +1,7 @@
 library(shiny)
 library(ggplot2)
 library(readr)
-library(corrplot)
+#library(corrplot)
 library(dplyr)
 library(lubridate)
 
@@ -37,7 +37,7 @@ shinyServer(function(input, output) {
   # Korrelation berechnen
   correlation <- cor(beehive_df[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1", "delta_hum2")])
   # Korrelation visualisieren
-  correlationvisual <- corrplot(correlation)
+  #correlationvisual <- corrplot(correlation)
   # Daniel erster Versuch. Zusammenhang nicht gut
   firsttry = ggplot(beehive_df, aes(x = temp1, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
     labs(title = "Vorlage GEOM Daniel", 
