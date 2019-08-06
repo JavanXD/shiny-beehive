@@ -60,9 +60,9 @@ shinyServer(function(input, output) {
     }
     
     # Filter Daterange ----
-    date_start_date <- as.Date(input$daterange[1], origin = "1970/01/01")
-    date_end_date <- as.Date(input$daterange[2], origin = "1970/01/01")
-    beehive_df <- subset(beehive_df)
+    date_start_date <- as.Date(input$daterange[1], origin = "1970-01-01")
+    date_end_date <- as.Date(input$daterange[2], origin = "1970-01-01")
+    beehive_df <- subset(beehive_df, timestamp > date_start_date & timestamp < date_end_date)
     
     # Filter Datenmengen ----
     if (input$filterhours == TRUE) {

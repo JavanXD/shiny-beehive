@@ -27,11 +27,11 @@ shinyUI(fluidPage(
       # DateRange
       dateRangeInput("daterange", 
                       "Zeitspanne auswählen:",
-                      start  = "2018/01/01",
-                      end    = "2019/07/01",
-                      min    = "2016/01/01",
-                      max    = "2024/12/31",
-                      format = "yy/mm/dd",
+                      start  = "2018-01-01",
+                      end    = "2019-07-01",
+                      min    = "2016-01-01",
+                      max    = "2024-12-31",
+                      format = "yy-mm-dd",
                       separator = " bis "),
       # Checkbox
       checkboxInput("filterhours", "Auf stündliche Werte begrenzen? (Speed-Up)", FALSE),
@@ -41,7 +41,7 @@ shinyUI(fluidPage(
       downloadButton('downloadData', 'Daten herunterladen'),
       # Horizontal line ----
       tags$hr(),
-      # adding the new div tag to the sidebar            
+      # Div mit Copyrights         
       tags$div(
         tags$p("Javan Rasokat (79133)"),
         tags$p("Daniel Böhm (76477)"),       
