@@ -1,0 +1,10 @@
+name: shiny-beehive
+title:
+username:
+account: honeypi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1073630
+bundleId: 2299116
+url: https://honeypi.shinyapps.io/shiny-beehive/
+when: 1565206245.81098
