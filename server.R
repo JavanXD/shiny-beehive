@@ -1,7 +1,7 @@
 library(shiny)
 library(ggplot2)
 library(readr)
-#library(corrplot)
+library(corrplot)
 library(dplyr)
 library(lubridate)
 
@@ -88,8 +88,8 @@ shinyServer(function(input, output) {
   output$summary <- renderDataTable({
     summary(beehive_df)
   })
-  output$cor <- renderText({
-    correlation
+  output$cor <- renderPlot({
+    corrplot(correlation, type="lower")
   })
   output$firsttry <- renderPlot({
     firsttry

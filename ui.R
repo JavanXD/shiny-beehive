@@ -52,7 +52,7 @@ shinyUI(fluidPage(
       tabPanel("Data", dataTableOutput("tabelle")),
       tabPanel("Histogramm Gewicht", plotOutput("distPlot")),
       tabPanel("Summary", dataTableOutput("summary")),
-      tabPanel("Corr", textOutput("cor")),
+      tabPanel("Corr", plotOutput("cor")),
       tabPanel("Example", plotOutput("firsttry")),
       tabPanel("About", uiOutput("about"))
     ))
