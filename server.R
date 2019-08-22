@@ -1,4 +1,6 @@
 library(shiny)
+library(shinydashboard)
+library(shinyjs)
 library(ggplot2)
 library(readr)
 library(corrplot)
@@ -9,25 +11,27 @@ shinyServer(function(input, output) {
   
   # Daten aufbereiten ----
   # import csv and skip unnecessary columns, set timeformat
+  beehive_df <- reactiveValues()
   beehive_df <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
                                                       timestamp = col_datetime(format = "%Y/%m/%d %H:%M:%S"), 
                                                       x5 = col_skip(),
                                                       x7 = col_skip(),
                                                       x8 = col_skip()))
-  
-  # berechne differenzen zwischen reihen
-  delta_weight <- diff(beehive_df$weight[order(beehive_df$ticks)])
-  delta_temp1 <- diff(beehive_df$temp1[order(beehive_df$ticks)])
-  delta_temp2 <- diff(beehive_df$temp2[order(beehive_df$ticks)])
-  delta_hum1 <- diff(beehive_df$hum1[order(beehive_df$ticks)])
-  delta_hum2 <- diff(beehive_df$hum2[order(beehive_df$ticks)])
-  # delete first row
-  beehive_df = beehive_df[-1,] 
-  beehive_df$delta_weight <- delta_weight
-  beehive_df$delta_temp1 <- delta_temp1
-  beehive_df$delta_temp2 <- delta_temp2
-  beehive_df$delta_hum1 <- delta_hum1
-  beehive_df$delta_hum2 <- delta_hum2
+  obsDf <- observe({
+    # berechne differenzen zwischen reihen
+    delta_weight <- diff(beehive_df$weight[order(beehive_df$ticks)])
+    delta_temp1 <- diff(beehive_df$temp1[order(beehive_df$ticks)])
+    delta_temp2 <- diff(beehive_df$temp2[order(beehive_df$ticks)])
+    delta_hum1 <- diff(beehive_df$hum1[order(beehive_df$ticks)])
+    delta_hum2 <- diff(beehive_df$hum2[order(beehive_df$ticks)])
+    # delete first row
+    beehive_df = beehive_df[-1,] 
+    beehive_df$delta_weight <- delta_weight
+    beehive_df$delta_temp1 <- delta_temp1
+    beehive_df$delta_temp2 <- delta_temp2
+    beehive_df$delta_hum1 <- delta_hum1
+    beehive_df$delta_hum2 <- delta_hum2
+  }, quoted = TRUE)
   
   # Test Zeug ----
   #View(beehive_df)
@@ -113,6 +117,15 @@ shinyServer(function(input, output) {
       "Zeigt die Korrelation"
       )
   })
+  ## observe the toggleButton being pressed
+  observeEvent(input$toggleButton, {
+    if(input$toggleButton %% 2 == 1){
+      shinyjs::hide(id = "myBox")
+    }else{
+      shinyjs::show(id = "myBox")
+    }
+  })
+  
   # Download Funktionalität 
   output$downloadData <- downloadHandler(
     filename = function() {
