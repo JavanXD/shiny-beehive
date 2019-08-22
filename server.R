@@ -132,6 +132,20 @@ shinyServer(function(input, output) {
       widths = c(1), margin = 0
     ) %>% hide_legend()
   })
+  output$dailyBoxplot <- renderPlotly({
+    
+    # Filter Zeitraum
+    date_start_date <- as.Date("2019-05-01")
+    date_end_date <- as.Date("2019-05-30")
+    beehive_df <- subset(beehive_df, timestamp > date_start_date & timestamp < date_end_date)
+    
+    # draw boxplot
+    p <- plot_ly(beehive_df,
+                 y = ~weight, 
+                 x = reorder(format(beehive_df$timestamp,'%d %B %y'), beehive_df$timestamp),
+                 type = "box",
+                 boxpoints = "suspectedoutliers") %>% layout(yaxis = list(title = "Gewicht [kg]")) %>% hide_legend()
+  })
   output$verlauf <- renderPlotly({
     
     # Filter Zeitraum
