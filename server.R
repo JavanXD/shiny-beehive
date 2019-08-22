@@ -158,7 +158,7 @@ shinyServer(function(input, output) {
       add_trace(y = ~temp1, name = 'Temperatur Brutraum [°C]', mode = 'lines+markers') %>%
       add_trace(y = ~temp2, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
       add_trace(y = ~hum1, name = 'Luftfeuchte [%]', mode = 'lines+markers')  %>%
-      filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Zeit"), yaxis = list(title = ""))
+      filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
   })
   output$about <- renderUI({
     tags$div(
