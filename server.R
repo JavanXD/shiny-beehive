@@ -132,6 +132,17 @@ shinyServer(function(input, output) {
       widths = c(1), margin = 0
     ) %>% hide_legend()
   })
+  output$verlauf <- renderPlotly({
+    # Filter Zeitraum
+    date_start_date <- as.Date("2019-06-01")
+    date_end_date <- as.Date("2019-06-7")
+    beehive_df <- subset(beehive_df, timestamp > date_start_date & timestamp < date_end_date)
+    p <- plot_ly(beehive_df, x = ~timestamp, y = ~weight, name = 'Gewicht [kg]', type = 'scatter', mode = 'lines+markers') %>%
+      add_trace(y = ~temp1, name = 'Temperatur Brutraum [°C]', mode = 'lines+markers') %>%
+      add_trace(y = ~temp2, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
+      add_trace(y = ~hum1, name = 'Luftfeuchte [%]', mode = 'lines+markers')  %>%
+      filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Zeit"), yaxis = list(title = ""))
+  })
   output$about <- renderUI({
     tags$div(
       br(),
