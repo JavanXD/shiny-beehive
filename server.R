@@ -6,6 +6,7 @@ library(readr)
 library(corrplot)
 library(dplyr)
 library(lubridate)
+library(plotly)
 
 shinyServer(function(input, output) {
   
@@ -31,7 +32,20 @@ shinyServer(function(input, output) {
     beehive_df$delta_temp2 <- delta_temp2
     beehive_df$delta_hum1 <- delta_hum1
     beehive_df$delta_hum2 <- delta_hum2
-  }, quoted = TRUE)
+  
+    }, quoted = TRUE)
+  
+  # Gruppiere Daten nach Tag und füge Min Max pro Tag hinzu ----
+  beehive_df_daily <- beehive_df %>%
+    mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+    group_by(dt, month, year) %>% 
+    summarise(temp1_max = max(temp1), temp1_min = min(temp1), weight_mean = mean(weight))
+  
+  # Gruppiere nach Monate für Boxplot
+  beehive_df_monthly <- beehive_df %>%
+    mutate(Date = ymd_hms(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+    group_by(month, year) %>% 
+    summarise(weight_max = max(weight), weight_min = min(weight), weight_mean = mean(weight), weight = sum(weight))
   
   # Test Zeug ----
   #View(beehive_df)
@@ -97,6 +111,26 @@ shinyServer(function(input, output) {
   })
   output$firsttry <- renderPlot({
     firsttry
+  })
+  output$monthlyBoxplot <- renderPlotly({
+    # add month to df
+    beehive_df$month <- format(beehive_df$timestamp, "%B %y")
+   
+    # draw boxplot
+    p <- plot_ly(beehive_df,
+                 y = ~weight, 
+                 x = reorder(format(beehive_df$timestamp,'%B %y'), beehive_df$timestamp),
+                 color = ~month, 
+                 type = "box",
+                 boxpoints = "suspectedoutliers") %>% layout(yaxis = list(title = "Gewicht [kg]"))
+    
+    # create multiple boxplots (but "Vverall" is not used at the moment)
+    p1 <- p %>% add_boxplot(x = "Overall")
+    p2 <- p %>% add_boxplot(x = reorder(format(beehive_df$timestamp,'%B %y'), beehive_df$timestamp))
+    subplot(
+      p2, shareY = TRUE,
+      widths = c(1), margin = 0
+    ) %>% hide_legend()
   })
   output$about <- renderUI({
     tags$div(
