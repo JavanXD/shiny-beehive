@@ -132,11 +132,21 @@ shinyServer(function(input, output) {
       widths = c(1), margin = 0
     ) %>% hide_legend()
   })
+  
+  selectDay <- dateInput("selectedDay", "Datum auswählen", value = "2019-06-7",
+                         format = "yyyy-mm-dd", startview = "month", width = "120px")
+  
+  selectDaysCount <- sliderInput("selectedDaysCount", "Anzahl Tage auswählen", 1, 180, 30, step = 1, round = FALSE,
+                                 format = NULL, locale = NULL, ticks = TRUE, animate = TRUE,
+                                 width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
+                                 timezone = NULL, dragRange = TRUE)
+  
   output$dailyBoxplot <- renderPlotly({
     
-    # Filter Zeitraum
-    date_start_date <- as.Date("2019-05-01")
-    date_end_date <- as.Date("2019-05-30")
+    # Abhängig von Konfiguration Zeitraum eingrenzen
+    date_end_date <- as.Date(input$selectedDay)
+    date_start_date <- ymd(date_end_date) - days(input$selectedDaysCount)
+    
     beehive_df <- subset(beehive_df, timestamp > date_start_date & timestamp < date_end_date)
     
     # draw boxplot
@@ -146,6 +156,17 @@ shinyServer(function(input, output) {
                  type = "box",
                  boxpoints = "suspectedoutliers") %>% layout(yaxis = list(title = "Gewicht [kg]")) %>% hide_legend()
   })
+  
+  output$dailyBoxplotUI <- renderUI({
+    tags$div(
+      br(),
+      selectDay,
+      selectDaysCount, 
+      plotlyOutput("dailyBoxplot"), 
+      p("Am 22. Mai muss der Imker arbeiten am Bienenvolk vorgenommen haben und den Honigraum heruntergenommen haben. Eventuell Schwarmkontrolle.")
+    )
+  })
+  
   output$verlauf <- renderPlotly({
     
     # Filter Zeitraum
@@ -160,6 +181,7 @@ shinyServer(function(input, output) {
       add_trace(y = ~hum1, name = 'Luftfeuchte [%]', mode = 'lines+markers')  %>%
       filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
   })
+
   output$about <- renderUI({
     tags$div(
       br(),

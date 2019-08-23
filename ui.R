@@ -58,7 +58,7 @@ shinyUI(
             tabPanel("Corr", textOutput("cor")),
             tabPanel("Example", plotOutput("firsttry")),
             tabPanel("Jahresverlauf Gewicht (Boxplots)", plotlyOutput("monthlyBoxplot"), p("Die Ausreißer im Jun 2018, April 2019, Mai 2019 und Juni 2019 in den niedrigen Gewichtsbereich zeigen das Honigernten.")),
-            tabPanel("Tagesverlauf Gewicht (Boxplots)", plotlyOutput("dailyBoxplot"), p("Am 22. Mai muss der Imker arbeiten am Bienenvolk vorgenommen haben und den Honigraum heruntergenommen haben. Eventuell Schwarmkontrolle.")),
+            tabPanel("Tagesverlauf Gewicht (Boxplots)", uiOutput("dailyBoxplotUI")),
             tabPanel("Zeitstrahl", plotlyOutput("verlauf")),
             tabPanel("About", uiOutput("about"))
           ))
