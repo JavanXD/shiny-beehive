@@ -80,7 +80,7 @@ shinyServer(function(input, output) {
     # Filter Daterange ----
     date_start_date <- as.Date(input$daterange[1], origin = "1970-01-01")
     date_end_date <- as.Date(input$daterange[2], origin = "1970-01-01")
-    beehive_df <- subset(beehive_df, timestamp > date_start_date & timestamp < date_end_date)
+    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
     
     # Filter Datenmengen ----
     if (input$filterhours == TRUE) {
@@ -134,10 +134,13 @@ shinyServer(function(input, output) {
   })
   
   selectDay <- dateInput("selectedDay", "Datum auswählen", value = "2019-06-7",
-                         format = "yyyy-mm-dd", startview = "month", width = "120px")
+                         format = "yyyy-mm-dd", startview = "month", width = "100px")
+  
+  selectDay2 <- dateInput("selectedDay2", "Datum auswählen", value = "2019-07-1",
+                         format = "yyyy-mm-dd", startview = "month", width = "100px")
   
   selectDaysCount <- sliderInput("selectedDaysCount", "Anzahl Tage auswählen", 1, 180, 30, step = 1, round = FALSE,
-                                 format = NULL, locale = NULL, ticks = TRUE, animate = TRUE,
+                                 format = NULL, ticks = TRUE, animate = TRUE,
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)
   
@@ -147,7 +150,7 @@ shinyServer(function(input, output) {
     date_end_date <- as.Date(input$selectedDay)
     date_start_date <- ymd(date_end_date) - days(input$selectedDaysCount)
     
-    beehive_df <- subset(beehive_df, timestamp > date_start_date & timestamp < date_end_date)
+    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
     
     # draw boxplot
     p <- plot_ly(beehive_df,
@@ -172,7 +175,7 @@ shinyServer(function(input, output) {
     # Filter Zeitraum
     date_start_date <- as.Date("2019-06-01")
     date_end_date <- as.Date("2019-06-7")
-    beehive_df <- subset(beehive_df, timestamp > date_start_date & timestamp < date_end_date)
+    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
     
     # Draw Zeitstrahl
     plot_ly(beehive_df, x = ~timestamp, y = ~weight, name = 'Gewicht [kg]', type = 'scatter', mode = 'lines+markers') %>%
@@ -201,6 +204,37 @@ shinyServer(function(input, output) {
       "Zeigt die Korrelation"
       )
   })
+  
+  output$gewichtsDeltas <- renderPlotly({
+    
+    # Abhängig von Konfiguration Zeitraum eingrenzen
+    date_end_date1 <- as.Date(input$selectedDay)
+    date_start_date1 <- ymd(date_end_date1) - days(input$selectedDaysCount)
+    date_end_date2 <- as.Date(input$selectedDay2)
+    date_start_date2 <- ymd(date_end_date2) - days(input$selectedDaysCount)
+    
+    beehive_df_weight1 <- subset(beehive_df, timestamp >= date_start_date1 & timestamp <= date_end_date2)
+    beehive_df_weight2 <- subset(beehive_df, timestamp >= date_start_date2 & timestamp <= date_end_date2)
+    
+    
+    # draw boxplot
+    p <- plot_ly(alpha = 0.4) %>%
+      add_histogram(x = ~beehive_df_weight1$delta_weight, name= "Zeitraum #1") %>%
+      add_histogram(x = ~beehive_df_weight2$delta_weight, name=  "Zeitraum #2") %>%
+      layout(barmode = "overlay") %>% layout(xaxis = list(title = ""), yaxis = list(title = "Gewicht [kg]"))
+    
+  })
+  
+  output$gewichtsDeltasUI <- renderUI({
+    tags$div(
+      br(),
+      selectDay,
+      selectDay2,
+      selectDaysCount, 
+      plotlyOutput("gewichtsDeltas")
+    )
+  })
+  
   ## observe the toggleButton being pressed
   observeEvent(input$toggleButton, {
     if(input$toggleButton %% 2 == 1){
