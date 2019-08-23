@@ -140,7 +140,7 @@ shinyServer(function(input, output) {
                          format = "yyyy-mm-dd", startview = "month", width = "100px")
   
   selectDaysCount <- sliderInput("selectedDaysCount", "Anzahl Tage auswählen", 1, 180, 30, step = 1, round = FALSE,
-                                 format = NULL, ticks = TRUE, animate = TRUE,
+                                 ticks = TRUE, animate = TRUE,
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)
   
