@@ -113,8 +113,11 @@ shinyServer(function(input, output) {
   forecast_model <- function(){
     
     # Filter Zeitraum
-    date_start_date <- as.Date("2019-06-01")
-    date_end_date <- as.Date("2019-06-15")
+    # Abhängig von Konfiguration Zeitraum eingrenzen
+    date_end_date <- as.Date(input$selectedDayZeitreihenanlalyse)
+    count_days = input$selectedCountZeitreihenanlalyse
+    date_start_date <- ymd(date_end_date) - days(count_days)
+    
     beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
     beehive_df <- subset(beehive_df, !is.na(weight))
     
@@ -126,7 +129,7 @@ shinyServer(function(input, output) {
                             abline(reg=lm(time_series~time(time_series)))) # fit a trend line
     
     # Grafische Analyse der Zeitreihe
-    TS <- ts(time_series, frequency = 14)
+    TS <- ts(time_series, frequency = count_days)
     
     # In R gibt es eine Funktion, mit deren Hilfe man Zeitreihen in die drei Komponenten Trend, Saisonalität und zufällige Fluktuationen aufteilen kann:
     time_series_components <- decompose(TS)
@@ -148,7 +151,7 @@ shinyServer(function(input, output) {
     
     
     #  Für weitere EDA untersuchen wir Zyklen über Tage hinweg:
-    #plot4 <- cycle(TS)
+    cycle(TS)
     
     # return all object as a list
     return(list(raw_plot,hw_plot,components_plot,forecast_plot))
@@ -157,16 +160,15 @@ shinyServer(function(input, output) {
   ########################################
   # Bedienelemente definieren
   ########################################
-  selectDay <- dateInput("selectedDay", "Datum auswählen", value = "2019-06-7",
-                         format = "yyyy-mm-dd", startview = "month", width = "100px")
+  selectDay <- function (id="selectedDay", val="2019-06-7", text="Datum auswählen") { dateInput(id, text, value = val,
+                         format = "yyyy-mm-dd", startview = "month", width = "100px") }
   
-  selectDay2 <- dateInput("selectedDay2", "Datum auswählen", value = "2019-07-1",
-                          format = "yyyy-mm-dd", startview = "month", width = "100px")
+  selectDay2 <- selectDay(id="selectedDay2",val="2019-07-1")
   
-  selectDaysCount <- sliderInput("selectedDaysCount", "Anzahl Tage auswählen", 1, 180, 30, step = 1, round = FALSE,
+  selectDaysCount <- function (id="selectedDaysCount", val=30, text="Anzahl Tage auswählen") {sliderInput(id, text, 1, 180, val, step = 1, round = FALSE,
                                  ticks = TRUE, animate = TRUE,
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
-                                 timezone = NULL, dragRange = TRUE)
+                                 timezone = NULL, dragRange = TRUE)}
   
   selectField <- selectInput("selectedField",label="Feld auswählen",choice=c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight"), selectize=FALSE)
   
@@ -258,18 +260,18 @@ shinyServer(function(input, output) {
   output$dailyBoxplotUI <- renderUI({
     tags$div(
       br(),
-      selectDay,
-      selectDaysCount, 
+      selectDay(),
+      selectDaysCount(), 
       plotlyOutput("dailyBoxplot"), 
       p("Am 22. Mai muss der Imker arbeiten am Bienenvolk vorgenommen haben und den Honigraum heruntergenommen haben. Eventuell Schwarmkontrolle.")
     )
   })
   
-  output$verlauf <- renderPlotly({
+  output$zeitstrahlPlotly <- renderPlotly({
     
     # Filter Zeitraum
-    date_start_date <- as.Date("2019-06-01")
-    date_end_date <- as.Date("2019-06-7")
+    date_start_date <- as.Date(input$selectedDayZeitstrahl2)
+    date_end_date <- as.Date(input$selectedDayZeitstrahl)
     beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
     
     # Draw Zeitstrahl
@@ -280,12 +282,21 @@ shinyServer(function(input, output) {
       filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
   })
   
+  output$zeitstrahlUI <- renderUI({
+    tags$div(
+      br(),
+      selectDay(id="selectedDayZeitstrahl",text="Datum von:", val="2019-06-15"),
+      selectDay(id="selectedDayZeitstrahl2",text="Datum bis:",val="2019-06-1"),
+      plotlyOutput("zeitstrahlPlotly")
+    )
+  })
+  
   output$gewichtsDeltas <- renderPlotly({
     
     # Abhängig von Konfiguration Zeitraum eingrenzen
-    date_end_date1 <- as.Date(input$selectedDay)
+    date_end_date1 <- as.Date(input$selectedDayGewichtsDeltas)
     date_start_date1 <- ymd(date_end_date1) - days(input$selectedDaysCount)
-    date_end_date2 <- as.Date(input$selectedDay2)
+    date_end_date2 <- as.Date(input$selectedDayGewichtsDeltas2)
     date_start_date2 <- ymd(date_end_date2) - days(input$selectedDaysCount)
     
     beehive_df_weight1 <- subset(beehive_df, timestamp >= date_start_date1 & timestamp <= date_end_date2)
@@ -303,10 +314,11 @@ shinyServer(function(input, output) {
   output$gewichtsDeltasUI <- renderUI({
     tags$div(
       br(),
-      selectDay,
-      selectDay2,
-      selectDaysCount, 
-      plotlyOutput("gewichtsDeltas")
+      selectDay(id="selectedDayGewichtsDeltas", val="2019-06-1", text= "Datum für Zeitraum 1"),
+      selectDay(id="selectedDayGewichtsDeltas2", val="2019-07-1", text= "Datum für Zeitraum 2"),
+      selectDaysCount(val=14), 
+      plotlyOutput("gewichtsDeltas"),
+      p("Anhand der Häufigkeitsverteilung können Gewichtszu-  und Abnahmen als Links- und Rechtssteil oder Symmetrisch festgestellt werden. Außerdem ist ersichtlich wie ein Zeitraum gegenüber einem anderen Zeitraum performt (Honigertrag) hat.")
     )
   })
 
@@ -314,26 +326,12 @@ shinyServer(function(input, output) {
   output$plotgraph2 <- renderPlot({forecast_model()[2]})
   output$plotgraph3 <- renderPlot({forecast_model()[3]})
   output$plotgraph4 <- renderPlot({forecast_model()[4]})
-  
-  output$zeitreihenanalysePlotly <- renderPlotly({
-    
-    # Filter Zeitraum
-    date_start_date <- as.Date("2019-06-01")
-    date_end_date <- as.Date("2019-06-15")
-    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
-    
-    # Draw Zeitstrahl
-    plot_ly(beehive_df, x = ~timestamp, y = ~weight, name = 'Gewicht [kg]', type = 'scatter', mode = 'lines+markers') %>%
-      add_trace(y = ~temp1, name = 'Temperatur Brutraum [°C]', mode = 'lines+markers') %>%
-      add_trace(y = ~temp2, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
-      add_trace(y = ~hum1, name = 'Luftfeuchte [%]', mode = 'lines+markers')  %>%
-      filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
-  })
 
   output$zeitreihenanalyseUI <- renderUI({
     tags$div(
       br(),
-      #plotlyOutput("zeitreihenanalysePlotly"),
+      selectDay(id="selectedDayZeitreihenanlalyse", val="2019-04-01"),
+      selectDaysCount(id="selectedCountZeitreihenanlalyse", val=4), 
       plotOutput("plotgraph1"),
       plotOutput("plotgraph2"),
       plotOutput("plotgraph3"),
