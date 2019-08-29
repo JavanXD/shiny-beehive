@@ -63,8 +63,8 @@ shinyUI(
           ),
           mainPanel(tabsetPanel(
             tabPanel("Messdatentabelle", dataTableOutput("tabelle")),
-            tabPanel("Histogramm Gewicht", plotOutput("histogramPlot")),
-            tabPanel("Übersicht", dataTableOutput("minMaxOverview")),
+            tabPanel("Wertebereich bestimmen", uiOutput("summaryUI")),
+            tabPanel("Histogramm", uiOutput("histogramUI")),
             tabPanel("Korrelation", plotOutput("cor")),
             tabPanel("Beispiel Daniel", plotOutput("firsttry")),
             tabPanel("Jahresverlauf Gewicht (Boxplots)", plotlyOutput("monthlyBoxplot"), p("Die Ausreißer im Jun 2018, April 2019, Mai 2019 und Juni 2019 in den niedrigen Gewichtsbereich zeigen das Honigernten.")),

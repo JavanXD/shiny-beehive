@@ -110,6 +110,50 @@ shinyServer(function(input, output) {
     
   })
   
+  forecast_model <- function(){
+    
+    # Filter Zeitraum
+    date_start_date <- as.Date("2019-06-01")
+    date_end_date <- as.Date("2019-06-15")
+    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
+    beehive_df <- subset(beehive_df, !is.na(weight))
+    
+    # Zeitreihenanalyse ist es hilfreich, den Datensatz in einer R-Variable abzuspeichern
+    time_series <- beehive_df$weight
+    
+    # plot the raw data
+    raw_plot <- as.ggplot(function()  plot(time_series) +
+                            abline(reg=lm(time_series~time(time_series)))) # fit a trend line
+    
+    # Grafische Analyse der Zeitreihe
+    TS <- ts(time_series, frequency = 14)
+    
+    # In R gibt es eine Funktion, mit deren Hilfe man Zeitreihen in die drei Komponenten Trend, Saisonalität und zufällige Fluktuationen aufteilen kann:
+    time_series_components <- decompose(TS)
+    
+    # Der Rückgabewert time_series_components dieser Funktion enthält eine Liste, welcher verschiedene Komponenten enthält. Ein Plot dieser Liste zeigt Folgendes:
+    components_plot <- as.ggplot(function()  plot(time_series_components))
+    
+    # Fehler: Zeitreihe hat keine oder weniger als 2 Perioden
+    # => zurück zum exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion.
+    # Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren  Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? Wenn Sie für Ihre Zeitreihe diesem  Gedanken zustimmen können, ist die Methodik des exponentiellem Glättens wahrscheinlich die Richtige für Sie!
+    time_series_vorhersage <- HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
+    #plot(time_series_vorhersage)
+    hw_plot <- as.ggplot(function() plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5"))
+    
+    
+    m <- stats::HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
+    forecast_data <- forecast(m, h=14)
+    forecast_plot <- as.ggplot(function()  plot(forecast_data))
+    
+    
+    #  Für weitere EDA untersuchen wir Zyklen über Tage hinweg:
+    #plot4 <- cycle(TS)
+    
+    # return all object as a list
+    return(list(raw_plot,hw_plot,components_plot,forecast_plot))
+  }
+  
   ########################################
   # Bedienelemente definieren
   ########################################
@@ -124,18 +168,48 @@ shinyServer(function(input, output) {
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)
   
+  selectField <- selectInput("selectedField",label="Feld auswählen",choice=c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight"), selectize=FALSE)
+  
   ########################################
   # UI-Komponenten ausgeben
   ########################################
-  output$histogramPlot <- renderPlot({
-    ggplot(beehive_df)+geom_histogram(aes(weight))
-    #ggplot(beehive_df)+geom_point(aes(x=weight,y=temp1))+xlim(input$x_min,input$x_max)
-  })
   output$tabelle <- renderDataTable({
     zu_plotten()
   })
-  output$minMaxOverview <- renderDataTable({
-    summary(beehive_df)
+  output$sum <- renderPrint({
+    summary(beehive_df[input$selectedField])
+  })
+  output$box <- renderPlot({
+    boxplot(beehive_df[input$selectedField],col="sky blue",border="purple", main=names(beehive_df[input$selectedField]))
+  })
+  output$summaryUI <- renderUI({
+    tags$div(
+      br(),
+      selectField,
+      verbatimTextOutput("sum"),
+      plotOutput("box"),
+      p("Mit Hilfe dieser Übersicht kann die Art des Sensors ausgemacht werden und ggf. die erste Header-Zeile in der CSV Datei an den Typ (weight, temp, hum etc.) angepasst werden. Außerdem kann die Anzahl der Fehlmessungen (NAs) für bestimmte Felder abgelesen werden."))
+  })
+  output$histogramPlot <- renderPlot({
+    do_plot <- function (columnName) {
+      ggplot(data=beehive_df, aes_string(columnName)) + 
+      geom_histogram(aes(y =..density..), 
+                     col="red", 
+                     fill="green", 
+                     alpha = .2) + 
+      geom_density(col=2) + 
+      labs(title=paste("Histogram for", toString(columnName))) +
+      labs(x=toString(columnName), y="Count")
+    }
+    field <- input$selectedField
+    do_plot(field)
+  })
+  output$histogramUI <- renderUI({
+    tags$div(
+      br(),
+      selectField,
+      plotOutput("histogramPlot")
+    )
   })
   output$cor <- renderPlot({
     plotCor()
@@ -235,50 +309,6 @@ shinyServer(function(input, output) {
       plotlyOutput("gewichtsDeltas")
     )
   })
-  
-  forecast_model <- function(){
-
-    # Filter Zeitraum
-    date_start_date <- as.Date("2019-06-01")
-    date_end_date <- as.Date("2019-06-15")
-    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
-    beehive_df <- subset(beehive_df, !is.na(weight))
-  
-    # Zeitreihenanalyse ist es hilfreich, den Datensatz in einer R-Variable abzuspeichern
-    time_series <- beehive_df$weight
-  
-    # plot the raw data
-    raw_plot <- as.ggplot(function()  plot(time_series) +
-      abline(reg=lm(time_series~time(time_series)))) # fit a trend line
-
-    # Grafische Analyse der Zeitreihe
-    TS <- ts(time_series, frequency = 14)
-
-    # In R gibt es eine Funktion, mit deren Hilfe man Zeitreihen in die drei Komponenten Trend, Saisonalität und zufällige Fluktuationen aufteilen kann:
-    time_series_components <- decompose(TS)
-
-    # Der Rückgabewert time_series_components dieser Funktion enthält eine Liste, welcher verschiedene Komponenten enthält. Ein Plot dieser Liste zeigt Folgendes:
-    components_plot <- as.ggplot(function()  plot(time_series_components))
-    
-    # Fehler: Zeitreihe hat keine oder weniger als 2 Perioden
-    # => zurück zum exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion.
-    # Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren  Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? Wenn Sie für Ihre Zeitreihe diesem  Gedanken zustimmen können, ist die Methodik des exponentiellem Glättens wahrscheinlich die Richtige für Sie!
-    time_series_vorhersage <- HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
-    #plot(time_series_vorhersage)
-    hw_plot <- as.ggplot(function() plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5"))
-    
-
-    m <- stats::HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
-    forecast_data <- forecast(m, h=14)
-    forecast_plot <- as.ggplot(function()  plot(forecast_data))
-  
-
-    #  Für weitere EDA untersuchen wir Zyklen über Tage hinweg:
-    #plot4 <- cycle(TS)
-  
-    # return all object as a list
-    return(list(raw_plot,hw_plot,components_plot,forecast_plot))
-  }
 
   output$plotgraph1 <- renderPlot({forecast_model()[1]})
   output$plotgraph2 <- renderPlot({forecast_model()[2]})
@@ -330,6 +360,10 @@ shinyServer(function(input, output) {
       "Zeigt die Korrelation"
       )
   })
+  
+  ########################################
+  # Weitere UI Utilities
+  ########################################
   
   ## observe the toggleButton being pressed
   observeEvent(input$toggleButton, {
