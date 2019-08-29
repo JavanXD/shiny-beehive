@@ -7,10 +7,15 @@ library(corrplot)
 library(dplyr)
 library(lubridate)
 library(plotly)
+library(forecast)
+library(pryr)
+library(ggplotify)
 
 shinyServer(function(input, output) {
   
-  # Daten aufbereiten ----
+  ########################################
+  # Daten aufbereiten 
+  ########################################
   # import csv and skip unnecessary columns, set timeformat
   beehive_df <- reactiveValues()
   beehive_df <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
@@ -26,7 +31,7 @@ shinyServer(function(input, output) {
     delta_hum1 <- diff(beehive_df$hum1[order(beehive_df$ticks)])
     delta_hum2 <- diff(beehive_df$hum2[order(beehive_df$ticks)])
     # delete first row
-    beehive_df = beehive_df[-1,] 
+    beehive_df <- beehive_df[-1,] 
     beehive_df$delta_weight <- delta_weight
     beehive_df$delta_temp1 <- delta_temp1
     beehive_df$delta_temp2 <- delta_temp2
@@ -47,23 +52,33 @@ shinyServer(function(input, output) {
     group_by(month, year) %>% 
     summarise(weight_max = max(weight), weight_min = min(weight), weight_mean = mean(weight), weight = sum(weight))
   
-  # Test Zeug ----
+  ########################################
+  # Skripte Testen
+  ########################################
   #View(beehive_df)
   #summary(beehive_df)
   
-  # Plots ----
-  # Korrelation berechnen
-  correlation <- cor(beehive_df[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1", "delta_hum2")])
-  # Korrelation visualisieren
-  #correlationvisual <- corrplot(correlation)
+  ########################################
+  # Graphen zeichnen
+  ########################################
   # Daniel erster Versuch. Zusammenhang nicht gut
   firsttry = ggplot(beehive_df, aes(x = temp1, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
     labs(title = "Vorlage GEOM Daniel", 
          subtitle = "Erster Versuch", 
          x = "Außentemperatur in Celsius", y = "Gewichtsdifferenz zum Vortag"
     )
+
+
+  ########################################
+  # Funktionen definieren, die für Graphen verwendet werden.
+  ########################################
+  plotCor <- reactive({
+    # Korrelation berechnen
+    correlation <- cor(beehive_df[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1", "delta_hum2")])
+    # Korrelation visualisieren
+    corrplot(correlation, method = "ellipse", type = "upper", tl.srt = 45)
+  })
   
-  # Reactive function ----
   zu_plotten <- reactive({
     
     # Read file ----
@@ -95,23 +110,40 @@ shinyServer(function(input, output) {
     
   })
   
-  ####### Tabs definieren (Outputs)
-  output$distPlot <- renderPlot({
+  ########################################
+  # Bedienelemente definieren
+  ########################################
+  selectDay <- dateInput("selectedDay", "Datum auswählen", value = "2019-06-7",
+                         format = "yyyy-mm-dd", startview = "month", width = "100px")
+  
+  selectDay2 <- dateInput("selectedDay2", "Datum auswählen", value = "2019-07-1",
+                          format = "yyyy-mm-dd", startview = "month", width = "100px")
+  
+  selectDaysCount <- sliderInput("selectedDaysCount", "Anzahl Tage auswählen", 1, 180, 30, step = 1, round = FALSE,
+                                 ticks = TRUE, animate = TRUE,
+                                 width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
+                                 timezone = NULL, dragRange = TRUE)
+  
+  ########################################
+  # UI-Komponenten ausgeben
+  ########################################
+  output$histogramPlot <- renderPlot({
     ggplot(beehive_df)+geom_histogram(aes(weight))
     #ggplot(beehive_df)+geom_point(aes(x=weight,y=temp1))+xlim(input$x_min,input$x_max)
   })
   output$tabelle <- renderDataTable({
     zu_plotten()
   })
-  output$summary <- renderDataTable({
+  output$minMaxOverview <- renderDataTable({
     summary(beehive_df)
   })
   output$cor <- renderPlot({
-    corrplot(correlation, type="lower")
+    plotCor()
   })
   output$firsttry <- renderPlot({
     firsttry
   })
+  
   output$monthlyBoxplot <- renderPlotly({
     # add month to df
     beehive_df$month <- format(beehive_df$timestamp, "%B %y")
@@ -133,17 +165,6 @@ shinyServer(function(input, output) {
     ) %>% hide_legend()
   })
   
-  selectDay <- dateInput("selectedDay", "Datum auswählen", value = "2019-06-7",
-                         format = "yyyy-mm-dd", startview = "month", width = "100px")
-  
-  selectDay2 <- dateInput("selectedDay2", "Datum auswählen", value = "2019-07-1",
-                         format = "yyyy-mm-dd", startview = "month", width = "100px")
-  
-  selectDaysCount <- sliderInput("selectedDaysCount", "Anzahl Tage auswählen", 1, 180, 30, step = 1, round = FALSE,
-                                 ticks = TRUE, animate = TRUE,
-                                 width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
-                                 timezone = NULL, dragRange = TRUE)
-  
   output$dailyBoxplot <- renderPlotly({
     
     # Abhängig von Konfiguration Zeitraum eingrenzen
@@ -153,11 +174,11 @@ shinyServer(function(input, output) {
     beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
     
     # draw boxplot
-    p <- plot_ly(beehive_df,
-                 y = ~weight, 
-                 x = reorder(format(beehive_df$timestamp,'%d %B %y'), beehive_df$timestamp),
-                 type = "box",
-                 boxpoints = "suspectedoutliers") %>% layout(yaxis = list(title = "Gewicht [kg]")) %>% hide_legend()
+    plot_ly(beehive_df,
+             y = ~weight, 
+             x = reorder(format(beehive_df$timestamp,'%d %B %y'), beehive_df$timestamp),
+             type = "box",
+             boxpoints = "suspectedoutliers") %>% layout(yaxis = list(title = "Gewicht [kg]")) %>% hide_legend()
   })
   
   output$dailyBoxplotUI <- renderUI({
@@ -183,26 +204,6 @@ shinyServer(function(input, output) {
       add_trace(y = ~temp2, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
       add_trace(y = ~hum1, name = 'Luftfeuchte [%]', mode = 'lines+markers')  %>%
       filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
-  })
-
-  output$about <- renderUI({
-    tags$div(
-      br(),
-      tags$h1("About"),
-      "Fragestellungen die beantwortet werden sollen:",
-      br(),
-      "Zusammenhang zwischen Temperatur und Honigproduktion / Ertrag",
-      br(),
-      "Darstellen an welchen Tagen der Imker da war und Honig entnommen hat?",
-      br(),
-      "Darstellen an welchen Tagen es geregnet hat und kein Honig gesammelt wurde?",
-      tags$h2("Data"),
-      "Beschreibung woher die Daten kommen",
-      tags$h2("Summary"),
-      "Zeigt die Summary Funktion",
-      tags$h2("Corr"),
-      "Zeigt die Korrelation"
-      )
   })
   
   output$gewichtsDeltas <- renderPlotly({
@@ -233,6 +234,101 @@ shinyServer(function(input, output) {
       selectDaysCount, 
       plotlyOutput("gewichtsDeltas")
     )
+  })
+  
+  forecast_model <- function(){
+
+    # Filter Zeitraum
+    date_start_date <- as.Date("2019-06-01")
+    date_end_date <- as.Date("2019-06-15")
+    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
+    beehive_df <- subset(beehive_df, !is.na(weight))
+  
+    # Zeitreihenanalyse ist es hilfreich, den Datensatz in einer R-Variable abzuspeichern
+    time_series <- beehive_df$weight
+  
+    # plot the raw data
+    raw_plot <- as.ggplot(function()  plot(time_series) +
+      abline(reg=lm(time_series~time(time_series)))) # fit a trend line
+
+    # Grafische Analyse der Zeitreihe
+    TS <- ts(time_series, frequency = 14)
+
+    # In R gibt es eine Funktion, mit deren Hilfe man Zeitreihen in die drei Komponenten Trend, Saisonalität und zufällige Fluktuationen aufteilen kann:
+    time_series_components <- decompose(TS)
+
+    # Der Rückgabewert time_series_components dieser Funktion enthält eine Liste, welcher verschiedene Komponenten enthält. Ein Plot dieser Liste zeigt Folgendes:
+    components_plot <- as.ggplot(function()  plot(time_series_components))
+    
+    # Fehler: Zeitreihe hat keine oder weniger als 2 Perioden
+    # => zurück zum exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion.
+    # Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren  Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? Wenn Sie für Ihre Zeitreihe diesem  Gedanken zustimmen können, ist die Methodik des exponentiellem Glättens wahrscheinlich die Richtige für Sie!
+    time_series_vorhersage <- HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
+    #plot(time_series_vorhersage)
+    hw_plot <- as.ggplot(function() plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5"))
+    
+
+    m <- stats::HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
+    forecast_data <- forecast(m, h=14)
+    forecast_plot <- as.ggplot(function()  plot(forecast_data))
+  
+
+    #  Für weitere EDA untersuchen wir Zyklen über Tage hinweg:
+    #plot4 <- cycle(TS)
+  
+    # return all object as a list
+    return(list(raw_plot,hw_plot,components_plot,forecast_plot))
+  }
+
+  output$plotgraph1 <- renderPlot({forecast_model()[1]})
+  output$plotgraph2 <- renderPlot({forecast_model()[2]})
+  output$plotgraph3 <- renderPlot({forecast_model()[3]})
+  output$plotgraph4 <- renderPlot({forecast_model()[4]})
+  
+  output$zeitreihenanalysePlotly <- renderPlotly({
+    
+    # Filter Zeitraum
+    date_start_date <- as.Date("2019-06-01")
+    date_end_date <- as.Date("2019-06-15")
+    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
+    
+    # Draw Zeitstrahl
+    plot_ly(beehive_df, x = ~timestamp, y = ~weight, name = 'Gewicht [kg]', type = 'scatter', mode = 'lines+markers') %>%
+      add_trace(y = ~temp1, name = 'Temperatur Brutraum [°C]', mode = 'lines+markers') %>%
+      add_trace(y = ~temp2, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
+      add_trace(y = ~hum1, name = 'Luftfeuchte [%]', mode = 'lines+markers')  %>%
+      filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
+  })
+
+  output$zeitreihenanalyseUI <- renderUI({
+    tags$div(
+      br(),
+      #plotlyOutput("zeitreihenanalysePlotly"),
+      plotOutput("plotgraph1"),
+      plotOutput("plotgraph2"),
+      plotOutput("plotgraph3"),
+      plotOutput("plotgraph4")
+    )
+  })
+
+  output$about <- renderUI({
+    tags$div(
+      br(),
+      tags$h1("About"),
+      "Fragestellungen die beantwortet werden sollen:",
+      br(),
+      "Zusammenhang zwischen Temperatur und Honigproduktion / Ertrag",
+      br(),
+      "Darstellen an welchen Tagen der Imker da war und Honig entnommen hat?",
+      br(),
+      "Darstellen an welchen Tagen es geregnet hat und kein Honig gesammelt wurde?",
+      tags$h2("Data"),
+      "Beschreibung woher die Daten kommen",
+      tags$h2("Summary"),
+      "Zeigt die Summary Funktion",
+      tags$h2("Corr"),
+      "Zeigt die Korrelation"
+      )
   })
   
   ## observe the toggleButton being pressed

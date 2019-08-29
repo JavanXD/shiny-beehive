@@ -1,3 +1,13 @@
+library(shiny)
+library(shinydashboard)
+library(shinyjs)
+library(ggplot2)
+library(readr)
+library(corrplot)
+library(dplyr)
+library(lubridate)
+library(plotly)
+library(forecast)
 
 shinyUI(
   # Application title
@@ -52,15 +62,16 @@ shinyUI(
             
           ),
           mainPanel(tabsetPanel(
-            tabPanel("Data", dataTableOutput("tabelle")),
-            tabPanel("Histogramm Gewicht", plotOutput("distPlot")),
-            tabPanel("Summary", dataTableOutput("summary")),
-            tabPanel("Corr", textOutput("cor")),
-            tabPanel("Example", plotOutput("firsttry")),
+            tabPanel("Messdatentabelle", dataTableOutput("tabelle")),
+            tabPanel("Histogramm Gewicht", plotOutput("histogramPlot")),
+            tabPanel("Übersicht", dataTableOutput("minMaxOverview")),
+            tabPanel("Korrelation", plotOutput("cor")),
+            tabPanel("Beispiel Daniel", plotOutput("firsttry")),
             tabPanel("Jahresverlauf Gewicht (Boxplots)", plotlyOutput("monthlyBoxplot"), p("Die Ausreißer im Jun 2018, April 2019, Mai 2019 und Juni 2019 in den niedrigen Gewichtsbereich zeigen das Honigernten.")),
             tabPanel("Tagesverlauf Gewicht (Boxplots)", uiOutput("dailyBoxplotUI")),
             tabPanel("Zeitstrahl", plotlyOutput("verlauf")),
             tabPanel("Gewichtsanalyse", uiOutput("gewichtsDeltasUI")),
+            tabPanel("Zeitreihenanalyse und Prognose", uiOutput("zeitreihenanalyseUI")),
             tabPanel("About", uiOutput("about"))
           ))
         )
