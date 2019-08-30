@@ -13,8 +13,7 @@ library(DT)
 ########################################
 # Wichtige UI Komponenen
 ########################################
-oldbody <- tabsetPanel(id = "inTabset",
-             #tabPanel("Messdatentabelle", icon = icon("table"), dataTableOutput("tabelle")),
+dashboard <- tabBox(title = NULL, width = 12, 
              tabPanel("Wertebereich bestimmen", icon = icon("database"), uiOutput("summaryUI")),
              tabPanel("Merkmal Visualisierung", icon = icon("chart-bar"), uiOutput("histogramUI")),
              tabPanel("Korrelation", icon = icon("project-diagram"), plotOutput("cor")),
@@ -24,47 +23,6 @@ oldbody <- tabsetPanel(id = "inTabset",
              tabPanel("Zeitstrahl", icon = icon("chart-line"), uiOutput("zeitstrahlUI")),
              tabPanel("Gewichtsanalyse", icon = icon("balance-scale"), uiOutput("gewichtsDeltasUI")),
              tabPanel("Zeitreihenanalyse und Prognose", icon = icon("eye"), uiOutput("zeitreihenanalyseUI"))
-             #tabPanel("About", uiOutput("about"))
-)
-examplebody <- fluidRow(
-  column(width = 4,
-         box(
-           title = "Box title", width = NULL, status = "primary",
-           "Box content"
-         ),
-         box(
-           title = "Title 1", width = NULL, solidHeader = TRUE, status = "primary",
-           "Box content"
-         ),
-         box(
-           width = NULL, background = "black",
-           "A box with a solid black background"
-         )
-  ),
-  column(width = 4,
-         box(
-           status = "warning", width = NULL,
-           "Box content"
-         ),
-         box(
-           title = "Title 3", width = NULL, solidHeader = TRUE, status = "warning",
-           "Box content"
-         ),
-         box(
-           title = "Title 5", width = NULL, background = "light-blue",
-           "A box with a solid light-blue background"
-         )
-  ),
-  column(width = 4,
-         box(
-           title = "Title 2", width = NULL, solidHeader = TRUE,
-           "Box content"
-         ),
-         box(
-           title = "Title 6", width = NULL, background = "maroon",
-           "A box with a solid maroon background"
-         )
-  )
 )
 
 upload <- tags$div(useShinyjs(),
@@ -104,7 +62,7 @@ controlls <- tags$div(
         
 )
 url_javan <- tags$a("Javan Rasokat", href = "https://javan.de")
-url_twitter <- "https://twitter.com/intent/tweet?text=%23HoneyPi &url=https://www.honey-pi.de"
+url_twitter <- "https://twitter.com/intent/tweet?text=%23HoneyPi&url=https://www.honey-pi.de"
 url_repo <- "https://github.com/JavanXD/shiny-beehive"
 url_shiny <- "https://honeypi.shinyapps.io/shiny-beehive/"
 info <- tags$div(
@@ -117,62 +75,73 @@ info <- tags$div(
             #img(src="bee_small.jpg", width="200px"),
             )
 )
-about <- box(
-            title = "Info", width = NULL, solidHeader = TRUE, status = "primary",
-            tags$h3("Bescheibung der Felder"),
-            "hum1 - Luftfeuchte, hum2, weight, temp1, temp2",
-            tags$h3("Notwendige Felder"),
-            "hum1, hum2, weight, temp1, temp2",
-            tags$h3("Datenerhebung"),
-            "hum1, hum2, weight, temp1, temp2"
-          )
+start <- fluidRow(
+  column(3,
+         box(
+           title = "Datenerhebung", width = NULL, solidHeader = FALSE, status = "warning",
+           "Die bereits vorliegenden Messdaten stammen von einem Bienenstand-Monitoring-System. Dabei messen Sensoren im und am Bienenstand Umwelteinflüsse, wie die Temperatur, die Luftfeuchtigkeit und das Gewicht des Bienenstands. Dieses Monitoring System ist modular, sodass weitere Sensorenarten wie Luftdruck, Regenmenge und Luftqualität ergänzt werden können. Eine weitere Ergänzung wäre beispielsweise das hinzufügen weiterer Temperatursensoren innerhalb jeder Wabengasse um die Bewegung der Wintertraube im Bienenstand zu erfassen. Die Messungen finden kontinuierlich, beispielsweise in einem Zyklus von alle 30 Minuten statt."
+         )
+  ),
+  column(3,
+         box(
+           title = "Statistische Einheit und Merkmale", width = NULL, solidHeader = FALSE, status = "warning",
+           tags$h3("Bescheibung der Felder"),
+           "hum1 - Luftfeuchte, hum2, weight, temp1, temp2",
+           tags$h3("Notwendige Felder"),
+           "hum1, hum2, weight, temp1, temp2",
+           tags$h3("Datenerhebung"),
+           "hum1, hum2, weight, temp1, temp2"
+         )
+  ),
+  column(3,
+         box(
+           title = "Bemerkung", width = NULL, solidHeader = FALSE, status = "warning",
+           "Der Quellcode der Shiny App ist bisher noch relativ statisch, sodass der importierte Datensatz in einem ganz bestimmten Format vorliegen muss. Daher müssen auch die Header-Felder der CSV-Datei noch mindestens die beschriebenen Merkmale enthalten."
+         )
+  )
+)
 
 ########################################
 # Neues Shiny Dashboard Layout
 ########################################
 body <- dashboardBody(tabItems(
-  tabItem(tabName = "info",
-          fluidRow(
-            column(12,
-               about
-            )
-          )
+  tabItem(tabName = "start",
+    start
   ),
   tabItem(tabName = "dashboard",
-    oldbody
-  ),
-  tabItem(tabName = "widgets",
-    examplebody
+          fluidRow( 
+            dashboard
+          )
   ),
   tabItem(tabName = "rawdata",
           fluidRow(
             column(4,
                    box(
-                     title = "Upload", width = NULL, solidHeader = TRUE, status = "warning",
+                     title = "Upload", width = NULL, solidHeader = FALSE, status = "warning",
                      upload
                    )
              ), 
             column(4,
                    box(
-                     title = "Eingrenzen", width = NULL, solidHeader = TRUE, status = "warning",
+                     title = "Eingrenzen", width = NULL, solidHeader = FALSE, status = "warning",
                      controlls
                    )
              ), 
             column(4,
                    box(
-                     title = "Download", width = NULL, solidHeader = TRUE, status = "warning",
+                     title = "Download", width = NULL, solidHeader = FALSE, status = "warning",
                      download
                    )
             ),
             column(12,
                  box(
-                   title = "Messdatentabelle", width = NULL, solidHeader = TRUE, status = "warning",
+                   title = "Messdatentabelle", width = NULL, solidHeader = FALSE, status = "warning",
                    dataTableOutput('tabelle')
                  )
             ),
             column(12,
                    box(
-                     title = "Hinweis", width = NULL, solidHeader = TRUE, status = "primary",
+                     title = "Hinweis", width = NULL, solidHeader = FALSE, status = "primary",
                      "Bitte zuerst die Datei hier hochladen, bevor die Graphen aufgerufen werden."
                    )
             )
@@ -182,9 +151,8 @@ body <- dashboardBody(tabItems(
 header <- dashboardHeader(title = "HoneyPi Shiny App")
 sidebar <- dashboardSidebar(collapsed = FALSE, 
                             sidebarMenu(id = "tabs",
-                              menuItem("Startseite", tabName = "info", icon = icon("info-circle")),
+                              menuItem("Startseite", tabName = "start", icon = icon("info-circle")),
                               menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-                              menuItem("Widgets", tabName = "widgets", icon = icon("th")),
                               menuItem("Messdaten", tabName = "rawdata", icon = icon("table"))
                             ), 
                             #controlls, 
@@ -211,7 +179,7 @@ footer <- tags$footer(tags$div("",
     bottom: 0;
     color: white;
     background-color: #222d32;
-    height:50px;   /* Height of the footer */
+    height:55px;   /* Height of the footer */
     color: white;
     padding: 10px;
     z-index: 1000;")
@@ -234,7 +202,7 @@ oldui <- navbarPage("Bienenstand Shiny App",
                     controlls, 
                     info
                   ),
-                  mainPanel(oldbody)
+                  mainPanel(dashboard)
                 )
               )
             )

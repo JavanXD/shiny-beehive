@@ -26,6 +26,9 @@ server <- function(input, output, session) {
                                                       x8 = col_skip()))
   beehive_df_unfiltered <- beehive_df
   
+  # TODO: Zeile in Produktion entfernen. 
+  beehive_df <- subset(beehive_df, weight != 100) # Demo: Im Datensatz sind viele Test/Kalibrierungsmessungen mit 100kg. Die müssen rausgefiltert werden.
+  
   treat_df <- function(df) {
     # berechne differenzen zwischen reihen
     delta_weight <- diff(df$weight[order(df$ticks)])
@@ -184,9 +187,9 @@ server <- function(input, output, session) {
                                  ticks = TRUE, animate = TRUE,
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)}
-  selectableFields <- c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight")
+  selectableFields <- c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_hum1")
   selectField <- function (id="selectedField", val=NULL) {
-                selectInput(id,label="Feld auswählen",choice=selectableFields, selected=val, selectize=FALSE) }
+                selectInput(id,label="Merkmal auswählen",choice=selectableFields, selected=val, selectize=FALSE) }
   
   ########################################
   # UI-Komponenten ausgeben
@@ -208,7 +211,7 @@ server <- function(input, output, session) {
       tags$h3("Boxplot"),
       tags$p("Ein Boxplot zeigt für jedes Merkmal Median, Quartilsabstand, Normalbereich und Ausreißer an."),
       plotOutput("box"),
-      p("Mit Hilfe dieser Übersicht kann die Art des Sensors ausgemacht werden und ggf. die erste Header-Zeile in der CSV Datei an den Typ (weight, temp, hum etc.) angepasst werden. Außerdem kann die Anzahl der Fehlmessungen (NAs) für bestimmte Felder abgelesen werden."))
+      p("Mit Hilfe dieser Übersicht kann die Art des Sensors ausgemacht werden und ggf. die erste Header-Zeile in der CSV Datei an den Typ (weight, temp, hum etc.) angepasst werden. Außerdem kann die Anzahl der Fehlmessungen (NAs) für bestimmte Merkmale abgelesen werden."))
   })
   output$histogramPlot <- renderPlot({
     do_plot <- function (columnName) {
@@ -235,7 +238,7 @@ server <- function(input, output, session) {
     y <- beehive_df[[field]]
     x <- beehive_df$weight  
     plot(x, y,       
-            ylab=paste("Ausgewähltes Feld: ", toString(field)),
+            ylab=paste("Ausgewähltes Merkmal: ", toString(field)),
             xlab="Gewicht [kg]")
   })
   output$histogramUI <- renderUI({
