@@ -11,35 +11,46 @@ library(forecast)
 library(pryr)
 library(ggplotify)
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   
   ########################################
   # Daten aufbereiten 
   ########################################
   # import csv and skip unnecessary columns, set timeformat
+  
   beehive_df <- reactiveValues()
   beehive_df <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
                                                       timestamp = col_datetime(format = "%Y/%m/%d %H:%M:%S"), 
                                                       x5 = col_skip(),
                                                       x7 = col_skip(),
                                                       x8 = col_skip()))
-  obsDf <- observe({
-    # berechne differenzen zwischen reihen
-    delta_weight <- diff(beehive_df$weight[order(beehive_df$ticks)])
-    delta_temp1 <- diff(beehive_df$temp1[order(beehive_df$ticks)])
-    delta_temp2 <- diff(beehive_df$temp2[order(beehive_df$ticks)])
-    delta_hum1 <- diff(beehive_df$hum1[order(beehive_df$ticks)])
-    delta_hum2 <- diff(beehive_df$hum2[order(beehive_df$ticks)])
-    # delete first row
-    beehive_df <- beehive_df[-1,] 
-    beehive_df$delta_weight <- delta_weight
-    beehive_df$delta_temp1 <- delta_temp1
-    beehive_df$delta_temp2 <- delta_temp2
-    beehive_df$delta_hum1 <- delta_hum1
-    beehive_df$delta_hum2 <- delta_hum2
+  beehive_df_unfiltered <- beehive_df
   
+  treat_df <- function(df) {
+    # berechne differenzen zwischen reihen
+    delta_weight <- diff(df$weight[order(df$ticks)])
+    delta_temp1 <- diff(df$temp1[order(df$ticks)])
+    delta_temp2 <- diff(df$temp2[order(df$ticks)])
+    delta_hum1 <- diff(df$hum1[order(df$ticks)])
+    delta_hum2 <- diff(df$hum2[order(df$ticks)])
+    # delete first row
+    df <- df[-1,] 
+    df$delta_weight <- delta_weight
+    df$delta_temp1 <- delta_temp1
+    df$delta_temp2 <- delta_temp2
+    df$delta_hum1 <- delta_hum1
+    df$delta_hum2 <- delta_hum2
+    
+    return(df)
+  }
+  
+  obsDf <- observe({
+      beehive_df <- treat_df(beehive_df)
     }, quoted = TRUE)
   
+  ########################################
+  # Skripte Testen
+  ########################################
   # Gruppiere Daten nach Tag und füge Min Max pro Tag hinzu ----
   beehive_df_daily <- beehive_df %>%
     mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
@@ -51,13 +62,8 @@ shinyServer(function(input, output) {
     mutate(Date = ymd_hms(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
     group_by(month, year) %>% 
     summarise(weight_max = max(weight), weight_min = min(weight), weight_mean = mean(weight), weight = sum(weight))
-  
-  ########################################
-  # Skripte Testen
-  ########################################
   #View(beehive_df)
-  #summary(beehive_df)
-  
+
   ########################################
   # Graphen zeichnen
   ########################################
@@ -79,14 +85,20 @@ shinyServer(function(input, output) {
     corrplot(correlation, method = "ellipse", type = "upper", tl.srt = 45)
   })
   
-  zu_plotten <- reactive({
-    
+  change_dataframe <- reactive({
     # Read file ----
     if (!is.null(input$fileuploadFile)) {
       # Wenn ein File ausgewählt wurde, dann nehme das File
-      beehive_df <- read.csv(input$fileuploadFile$datapath,
-                             header = input$fileuploadHeader,
-                             sep = input$fileuploadSep)
+      # beehive_df <- read_csv(input$fileuploadFile$datapath,
+      #                        header = input$fileuploadHeader,
+      #                        sep = input$fileuploadSep)
+      beehive_df_unfiltered <<- read_csv(input$fileuploadFile$datapath, col_types = cols(ticks = col_number(), 
+                                                                             timestamp = col_datetime(format = "%Y/%m/%d %H:%M:%S"), 
+                                                                             x5 = col_skip(),
+                                                                             x7 = col_skip(),
+                                                                             x8 = col_skip()))
+      beehive_df <- beehive_df_unfiltered
+                             
     } else {
       # Per default behalte den dataframe
       beehive_df <- beehive_df
@@ -107,6 +119,9 @@ shinyServer(function(input, output) {
     } else {
       beehive_df <- beehive_df
     }
+    
+    # change it global
+    beehive_df <<- treat_df(beehive_df)
     
   })
   
@@ -151,7 +166,7 @@ shinyServer(function(input, output) {
     
     
     #  Für weitere EDA untersuchen wir Zyklen über Tage hinweg:
-    cycle(TS)
+    #cycle(TS)
     
     # return all object as a list
     return(list(raw_plot,hw_plot,components_plot,forecast_plot))
@@ -170,13 +185,14 @@ shinyServer(function(input, output) {
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)}
   
-  selectField <- selectInput("selectedField",label="Feld auswählen",choice=c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight"), selectize=FALSE)
+  selectField <- function (id="selectedField") {
+                selectInput(id,label="Feld auswählen",choice=c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight"), selectize=FALSE) }
   
   ########################################
   # UI-Komponenten ausgeben
   ########################################
   output$tabelle <- renderDataTable({
-    zu_plotten()
+    change_dataframe()
   })
   output$sum <- renderPrint({
     summary(beehive_df[input$selectedField])
@@ -187,7 +203,7 @@ shinyServer(function(input, output) {
   output$summaryUI <- renderUI({
     tags$div(
       br(),
-      selectField,
+      selectField(),
       verbatimTextOutput("sum"),
       plotOutput("box"),
       p("Mit Hilfe dieser Übersicht kann die Art des Sensors ausgemacht werden und ggf. die erste Header-Zeile in der CSV Datei an den Typ (weight, temp, hum etc.) angepasst werden. Außerdem kann die Anzahl der Fehlmessungen (NAs) für bestimmte Felder abgelesen werden."))
@@ -203,13 +219,13 @@ shinyServer(function(input, output) {
       labs(title=paste("Histogram for", toString(columnName))) +
       labs(x=toString(columnName), y="Count")
     }
-    field <- input$selectedField
+    field <- input$selectedFieldSummary
     do_plot(field)
   })
   output$histogramUI <- renderUI({
     tags$div(
       br(),
-      selectField,
+      selectField(id="selectedFieldSummary"),
       plotOutput("histogramPlot")
     )
   })
@@ -232,7 +248,7 @@ shinyServer(function(input, output) {
                  type = "box",
                  boxpoints = "suspectedoutliers") %>% layout(yaxis = list(title = "Gewicht [kg]"))
     
-    # create multiple boxplots (but "Vverall" is not used at the moment)
+    # create multiple boxplots (but "Overall" is not used at the moment)
     p1 <- p %>% add_boxplot(x = "Overall")
     p2 <- p %>% add_boxplot(x = reorder(format(beehive_df$timestamp,'%B %y'), beehive_df$timestamp))
     subplot(
@@ -370,6 +386,14 @@ shinyServer(function(input, output) {
     }else{
       shinyjs::show(id = "myBox")
     }
+  })
+  
+  ## observe the resetFilter-Button being pressed
+  observeEvent(input$resetFilter, {
+    updateCheckboxInput(session, "filterhours", value = F)
+    updateDateRangeInput(session, "daterange", start = "2018-01-01", end = "2019-07-01")
+    beehive_df <<- beehive_df_unfiltered
+    updateTabsetPanel(session, "inTabset")
   })
   
   # Download Funktionalität 
