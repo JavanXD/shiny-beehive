@@ -16,14 +16,14 @@ library(DT)
 oldbody <- tabsetPanel(id = "inTabset",
              #tabPanel("Messdatentabelle", icon = icon("table"), dataTableOutput("tabelle")),
              tabPanel("Wertebereich bestimmen", icon = icon("database"), uiOutput("summaryUI")),
-             tabPanel("Histogramm", icon = icon("chart-bar"), uiOutput("histogramUI")),
-             tabPanel("Korrelation", plotOutput("cor")),
+             tabPanel("Merkmal Visualisierung", icon = icon("chart-bar"), uiOutput("histogramUI")),
+             tabPanel("Korrelation", icon = icon("project-diagram"), plotOutput("cor")),
              tabPanel("Beispiel Daniel", plotOutput("firsttry")),
-             tabPanel("Jahresverlauf Gewicht (Boxplots)", plotlyOutput("monthlyBoxplot"), p("Die Ausreißer im Jun 2018, April 2019, Mai 2019 und Juni 2019 in den niedrigen Gewichtsbereich zeigen das Honigernten.")),
-             tabPanel("Tagesverlauf Gewicht (Boxplots)", uiOutput("dailyBoxplotUI")),
-             tabPanel("Zeitstrahl", uiOutput("zeitstrahlUI")),
-             tabPanel("Gewichtsanalyse", uiOutput("gewichtsDeltasUI")),
-             tabPanel("Zeitreihenanalyse und Prognose", uiOutput("zeitreihenanalyseUI"))
+             tabPanel("Jahresverlauf Gewicht (Boxplots)", icon = icon("calendar"), plotlyOutput("monthlyBoxplot"), p("Die Ausreißer im Jun 2018, April 2019, Mai 2019 und Juni 2019 in den niedrigen Gewichtsbereich zeigen das Honigernten.")),
+             tabPanel("Tagesverlauf Gewicht (Boxplots)", icon = icon("calendar"), uiOutput("dailyBoxplotUI")),
+             tabPanel("Zeitstrahl", icon = icon("chart-line"), uiOutput("zeitstrahlUI")),
+             tabPanel("Gewichtsanalyse", icon = icon("balance-scale"), uiOutput("gewichtsDeltasUI")),
+             tabPanel("Zeitreihenanalyse und Prognose", icon = icon("eye"), uiOutput("zeitreihenanalyseUI"))
              #tabPanel("About", uiOutput("about"))
 )
 examplebody <- fluidRow(
@@ -118,10 +118,12 @@ info <- tags$div(
             )
 )
 about <- box(
-            title = "Beehive Shiny App", width = NULL, solidHeader = TRUE, status = "primary",
+            title = "Info", width = NULL, solidHeader = TRUE, status = "primary",
             tags$h3("Bescheibung der Felder"),
             "hum1 - Luftfeuchte, hum2, weight, temp1, temp2",
             tags$h3("Notwendige Felder"),
+            "hum1, hum2, weight, temp1, temp2",
+            tags$h3("Datenerhebung"),
             "hum1, hum2, weight, temp1, temp2"
           )
 
@@ -132,7 +134,6 @@ body <- dashboardBody(tabItems(
   tabItem(tabName = "info",
           fluidRow(
             column(12,
-               #uiOutput("about")
                about
             )
           )
@@ -181,7 +182,7 @@ body <- dashboardBody(tabItems(
 header <- dashboardHeader(title = "HoneyPi Shiny App")
 sidebar <- dashboardSidebar(collapsed = FALSE, 
                             sidebarMenu(id = "tabs",
-                              menuItem("Info", tabName = "info", icon = icon("info")),
+                              menuItem("Startseite", tabName = "info", icon = icon("info-circle")),
                               menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                               menuItem("Widgets", tabName = "widgets", icon = icon("th")),
                               menuItem("Messdaten", tabName = "rawdata", icon = icon("table"))
@@ -214,7 +215,7 @@ footer <- tags$footer(tags$div("",
     color: white;
     padding: 10px;
     z-index: 1000;")
-ui <- tagList(dashboardPage(skin = "yellow", title = "Beehive CSV Viewer",
+ui <- tagList(dashboardPage(skin = "yellow", title = "HoneyPi Shiny App",
   header,
   sidebar,
   body

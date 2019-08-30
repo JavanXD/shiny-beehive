@@ -184,9 +184,9 @@ server <- function(input, output, session) {
                                  ticks = TRUE, animate = TRUE,
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)}
-  
-  selectField <- function (id="selectedField") {
-                selectInput(id,label="Feld auswählen",choice=c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight"), selectize=FALSE) }
+  selectableFields <- c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight")
+  selectField <- function (id="selectedField", val=NULL) {
+                selectInput(id,label="Feld auswählen",choice=selectableFields, selected=val, selectize=FALSE) }
   
   ########################################
   # UI-Komponenten ausgeben
@@ -205,6 +205,8 @@ server <- function(input, output, session) {
       br(),
       selectField(),
       verbatimTextOutput("sum"),
+      tags$h3("Boxplot"),
+      tags$p("Ein Boxplot zeigt für jedes Merkmal Median, Quartilsabstand, Normalbereich und Ausreißer an."),
       plotOutput("box"),
       p("Mit Hilfe dieser Übersicht kann die Art des Sensors ausgemacht werden und ggf. die erste Header-Zeile in der CSV Datei an den Typ (weight, temp, hum etc.) angepasst werden. Außerdem kann die Anzahl der Fehlmessungen (NAs) für bestimmte Felder abgelesen werden."))
   })
@@ -222,11 +224,33 @@ server <- function(input, output, session) {
     field <- input$selectedFieldSummary
     do_plot(field)
   })
+  output$qqPlot <- renderPlot({
+    field <- input$selectedFieldSummary
+    y <- beehive_df[[field]]
+    qqnorm(y)
+    qqline(y) 
+  })
+  output$scatterPlot <- renderPlot({
+    field <- input$selectedFieldSummary
+    y <- beehive_df[[field]]
+    x <- beehive_df$weight  
+    plot(x, y,       
+            ylab=paste("Ausgewähltes Feld: ", toString(field)),
+            xlab="Gewicht [kg]")
+  })
   output$histogramUI <- renderUI({
     tags$div(
       br(),
-      selectField(id="selectedFieldSummary"),
-      plotOutput("histogramPlot")
+      selectField(id="selectedFieldSummary", val="temp1"),
+      tags$h3("Histogramm"),
+      tags$p("Das Histogramm macht die absolute oder relative Häufigkeitsverteilung und Häufigkeitsdichte sichtbar."),
+      plotOutput("histogramPlot"),
+      tags$h3("QQ-Plot"),
+      tags$p("Das Q-Q-Diagramm (bzw. Q-Q-Plot) ist eine Grafik, mir der eine quantiative Variable auf das Vorliegen einer Normalverteilung überprüft werden kann."),
+      plotOutput("qqPlot"),
+      tags$h3("Scatter Plot"),
+      tags$p("Das Scatterplot trägt zwei quantiative Merkmale im Koordinatensystem gegeneinander ab und lässt Zusammenhänge vermuten."),
+      plotOutput("scatterPlot")
     )
   })
   output$cor <- renderPlot({
