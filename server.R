@@ -11,7 +11,7 @@ library(forecast)
 library(pryr)
 library(ggplotify)
 
-shinyServer(function(input, output, session) {
+server <- function(input, output, session) {
   
   ########################################
   # Daten aufbereiten 
@@ -374,7 +374,7 @@ shinyServer(function(input, output, session) {
       "Zeigt die Korrelation"
       )
   })
-  
+    
   ########################################
   # Weitere UI Utilities
   ########################################
@@ -402,8 +402,14 @@ shinyServer(function(input, output, session) {
       paste('data-', Sys.Date(), '.csv', sep='')
     },
     content = function(con) {
-      write.csv2(beehive_df, con)
-    }
+      write.csv2(beehive_df, con, sep = ",", quote = FALSE)
+    },
+    contentType = "text/csv"
   )
   
-})
+}
+
+########################################
+# Main
+########################################      
+shinyServer(server)
