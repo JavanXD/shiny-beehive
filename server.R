@@ -26,10 +26,12 @@ server <- function(input, output, session) {
                                                       x8 = col_skip()))
   beehive_df_unfiltered <- beehive_df
   
-  # TODO: Zeile in Produktion entfernen. 
-  beehive_df <- subset(beehive_df, weight != 100) # Demo: Im Datensatz sind viele Test/Kalibrierungsmessungen mit 100kg. Die müssen rausgefiltert werden.
-  
   treat_df <- function(df) {
+    # TODO: Zeile in Produktion entfernen. 
+    df <- subset(df, weight != 100) # Demo: Im Datensatz sind viele Test/Kalibrierungsmessungen mit 100kg. Die müssen rausgefiltert werden.
+    df <- subset(df, !is.na(hum2))
+    df <- subset(df, !is.na(weight))
+    
     # berechne differenzen zwischen reihen
     delta_weight <- diff(df$weight[order(df$ticks)])
     delta_temp1 <- diff(df$temp1[order(df$ticks)])
@@ -137,7 +139,6 @@ server <- function(input, output, session) {
     date_start_date <- ymd(date_end_date) - days(count_days)
     
     beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
-    beehive_df <- subset(beehive_df, !is.na(weight))
     
     # Zeitreihenanalyse ist es hilfreich, den Datensatz in einer R-Variable abzuspeichern
     time_series <- beehive_df$weight
@@ -350,7 +351,7 @@ server <- function(input, output, session) {
     p <- plot_ly(alpha = 0.4) %>%
       add_histogram(x = ~beehive_df_weight1$delta_weight, name= "Zeitraum #1") %>%
       add_histogram(x = ~beehive_df_weight2$delta_weight, name=  "Zeitraum #2") %>%
-      layout(barmode = "overlay") %>% layout(xaxis = list(title = ""), yaxis = list(title = "Gewicht [kg]"))
+      layout(barmode = "overlay") %>% layout(xaxis = list(title = ""), yaxis = list(title = "Anzahl"))
     
   })
   
@@ -374,7 +375,8 @@ server <- function(input, output, session) {
     tags$div(
       br(),
       selectDay(id="selectedDayZeitreihenanlalyse", val="2019-04-01"),
-      selectDaysCount(id="selectedCountZeitreihenanlalyse", val=4), 
+      selectDaysCount(id="selectedCountZeitreihenanlalyse", val=4),
+      p(""),
       plotOutput("plotgraph1"),
       plotOutput("plotgraph2"),
       plotOutput("plotgraph3"),

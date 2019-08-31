@@ -62,6 +62,7 @@ controlls <- tags$div(
         
 )
 url_javan <- tags$a("Javan Rasokat", href = "https://javan.de")
+url_honeypi <- "https://www.honey-pi.de"
 url_twitter <- "https://twitter.com/intent/tweet?text=%23HoneyPi&url=https://www.honey-pi.de"
 url_repo <- "https://github.com/JavanXD/shiny-beehive"
 url_shiny <- "https://honeypi.shinyapps.io/shiny-beehive/"
@@ -69,7 +70,7 @@ info <- tags$div(
           tags$hr(style="color:#a1afb6;background-color:#a1afb6;border-color:#a1afb6"),
           # Div mit Copyrights         
           tags$div(style="padding:10px;color:#a1afb6",
-            HTML(paste("Die HoneyPi Shiny App dient zur Visualisierung von CSV-Dateien von Bienenstand-Monitoring-Systemen. Der Quellcode ist OpenSource auf Github unter der MIT Lizenz verfügbar. Die App wurde als Hochschulprojekt mit Hilfe von RStudio und Shiny von ", url_javan, " und Daniel Böhm entwickelt."))
+            HTML(paste("Die HoneyPi Shiny App dient zur Visualisierung von Messdaten von Bienenstand-Monitoring-Systemen. Der Quellcode ist OpenSource auf GitHub unter der MIT Lizenz verfügbar. Die App wurde als Hochschulprojekt mit Hilfe von RStudio und Shiny von Daniel Böhm und ", url_javan, " entwickelt."))
             #tags$p("Javan Rasokat (79133)"),
             #tags$p("Daniel Böhm (76477)"),       
             #img(src="bee_small.jpg", width="200px"),
@@ -97,6 +98,20 @@ start <- fluidRow(
          box(
            title = "Bemerkung", width = NULL, solidHeader = FALSE, status = "warning",
            "Der Quellcode der Shiny App ist bisher noch relativ statisch, sodass der importierte Datensatz in einem ganz bestimmten Format vorliegen muss. Daher müssen auch die Header-Felder der CSV-Datei noch mindestens die beschriebenen Merkmale enthalten."
+         )
+  ),
+  column(3,
+         box(
+           title = "Changelog", width = NULL, solidHeader = FALSE, status = "warning",
+           "tbd"
+         )
+  ),
+  column(3,
+         box(
+           title = "To-Dos", width = NULL, solidHeader = FALSE, status = "warning",
+           "- Das Unterstützen weiterer Uploadmöglichkeiten der Messdaten (MySql-Verbindung)",
+           "- ThingSpeak Anbindung",
+           "- Dadurch soll eine Livevisualisierung ermöglicht werden"
          )
   )
 )
@@ -159,6 +174,10 @@ sidebar <- dashboardSidebar(collapsed = FALSE,
                             info
 )
 footer <- tags$footer(tags$div("", 
+                               actionButton("honeypi_share",
+                                            label = "HoneyPi",
+                                            icon = icon("globe"),
+                                            onclick = sprintf("window.open('%s')", url_honeypi)),
                                actionButton("twitter_share",
                                             label = "Share",
                                             icon = icon("twitter"),
