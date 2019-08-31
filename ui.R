@@ -162,8 +162,12 @@ body <- dashboardBody(tabItems(
             )
            )
 )))
-
-header <- dashboardHeader(title = "HoneyPi Shiny App")
+logo <- tags$li(a(href = 'https://www.honey-pi.de',
+                tags$img(src='honeypi-brand.svg', height="20px"),
+                title = "Open HoneyPi.de"),
+                class = "dropdown",
+                style = "margin-right:15px")
+header <- dashboardHeader(title = "HoneyPi Shiny App", logo)
 sidebar <- dashboardSidebar(collapsed = FALSE, 
                             sidebarMenu(id = "tabs",
                               menuItem("Startseite", tabName = "start", icon = icon("info-circle")),
@@ -202,7 +206,9 @@ footer <- tags$footer(tags$div("",
     color: white;
     padding: 10px;
     z-index: 1000;")
-ui <- tagList(dashboardPage(skin = "yellow", title = "HoneyPi Shiny App",
+ui <- tagList(
+  tags$head(tags$link(rel="shortcut icon", href="favicon.ico")),
+  dashboardPage(skin = "yellow", title = "HoneyPi Shiny App",
   header,
   sidebar,
   body
