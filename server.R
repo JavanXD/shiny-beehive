@@ -40,11 +40,11 @@ server <- function(input, output, session) {
     delta_hum2 <- diff(df$hum2[order(df$ticks)])
     # delete first row
     df <- df[-1,] 
-    df$delta_weight <- delta_weight
-    df$delta_temp1 <- delta_temp1
-    df$delta_temp2 <- delta_temp2
-    df$delta_hum1 <- delta_hum1
-    df$delta_hum2 <- delta_hum2
+    df$delta_weight <- round(delta_weight, digits=4)
+    df$delta_temp1 <- round(delta_temp1, digits=4)
+    df$delta_temp2 <- round(delta_temp2, digits=4)
+    df$delta_hum1 <- round(delta_hum1, digits=4)
+    df$delta_hum2 <- round(delta_hum2, digits=4)
     
     return(df)
   }
