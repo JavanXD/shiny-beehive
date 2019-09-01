@@ -23,32 +23,30 @@ server <- function(input, output, session) {
   format <- "%Y/%m/%d %H:%M:%S"
   # import csv and skip unnecessary columns, set timeformat
   beehive_df <- reactiveValues()
-  beehive_df <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
+  beehive_df <- read_csv("beehive.csv", col_types = cols(unixtime = col_number(), 
                                                       timestamp = col_datetime(format = format), 
-                                                      x5 = col_skip(),
-                                                      x7 = col_skip(),
-                                                      x8 = col_skip()))
+                                                      x1 = col_skip()))
   beehive_df_unfiltered <- beehive_df
   
   treat_df <- function(df) {
     # TODO: Zeile in Produktion entfernen. 
     df <- subset(df, weight != 100) # Demo: Im Datensatz sind viele Test/Kalibrierungsmessungen mit 100kg. Die müssen rausgefiltert werden.
-    df <- subset(df, !is.na(hum2))
+    df <- subset(df, !is.na(hum_out))
     df <- subset(df, !is.na(weight))
     
     # berechne differenzen zwischen reihen
-    delta_weight <- diff(df$weight[order(df$ticks)])
-    delta_temp1 <- diff(df$temp1[order(df$ticks)])
-    delta_temp2 <- diff(df$temp2[order(df$ticks)])
-    delta_hum1 <- diff(df$hum1[order(df$ticks)])
-    delta_hum2 <- diff(df$hum2[order(df$ticks)])
+    delta_weight <- diff(df$weight[order(df$unixtime)])
+    delta_temp_hive <- diff(df$temp_hive[order(df$unixtime)])
+    delta_temp_out <- diff(df$temp_out[order(df$unixtime)])
+    delta_hum_hive <- diff(df$hum_hive[order(df$unixtime)])
+    delta_hum_out <- diff(df$hum_out[order(df$unixtime)])
     # delete first row
     df <- df[-1,] 
     df$delta_weight <- round(delta_weight, digits=4)
-    df$delta_temp1 <- round(delta_temp1, digits=4)
-    df$delta_temp2 <- round(delta_temp2, digits=4)
-    df$delta_hum1 <- round(delta_hum1, digits=4)
-    df$delta_hum2 <- round(delta_hum2, digits=4)
+    df$delta_temp_hive <- round(delta_temp_hive, digits=4)
+    df$delta_temp_out <- round(delta_temp_out, digits=4)
+    df$delta_hum_hive <- round(delta_hum_hive, digits=4)
+    df$delta_hum_out <- round(delta_hum_out, digits=4)
     
     return(df)
   }
@@ -64,7 +62,7 @@ server <- function(input, output, session) {
   beehive_df_daily <- beehive_df %>%
     mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
     group_by(dt, month, year) %>% 
-    summarise(temp1_max = max(temp1), temp1_min = min(temp1), weight_mean = mean(weight))
+    summarise(temp_hive_max = max(temp_hive), temp_hive_min = min(temp_hive), weight_mean = mean(weight))
   
   # Gruppiere nach Monate für Boxplot
   beehive_df_monthly <- beehive_df %>%
@@ -77,7 +75,7 @@ server <- function(input, output, session) {
   # Graphen zeichnen
   ########################################
   # Daniel erster Versuch. Zusammenhang nicht gut
-  firsttry = ggplot(beehive_df, aes(x = temp1, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
+  firsttry = ggplot(beehive_df, aes(x = temp_hive, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
     labs(title = "Vorlage GEOM Daniel", 
          subtitle = "Erster Versuch", 
          x = "Außentemperatur in Celsius", y = "Gewichtsdifferenz zum Vortag"
@@ -89,7 +87,7 @@ server <- function(input, output, session) {
   ########################################
   plotCor <- reactive({
     # Korrelation berechnen
-    correlation <- cor(beehive_df[,c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_temp2", "delta_hum1", "delta_hum2")])
+    correlation <- cor(beehive_df[,c("weight", "temp_hive", "temp_out", "hum_hive", "hum_out", "delta_weight", "delta_temp_hive", "delta_temp_out", "delta_hum_hive", "delta_hum_out")])
     # Korrelation visualisieren
     corrplot(correlation, method = "ellipse", type = "upper", tl.srt = 45)
   })
@@ -101,11 +99,9 @@ server <- function(input, output, session) {
       # beehive_df <- read_csv(input$fileuploadFile$datapath,
       #                        header = input$fileuploadHeader,
       #                        sep = input$fileuploadSep)
-      beehive_df_unfiltered <<- read_csv(input$fileuploadFile$datapath, col_types = cols(ticks = col_number(), 
+      beehive_df_unfiltered <<- read_csv(input$fileuploadFile$datapath, col_types = cols(unixtime = col_number(), 
                                                                              timestamp = col_datetime(format = format), 
-                                                                             x5 = col_skip(),
-                                                                             x7 = col_skip(),
-                                                                             x8 = col_skip()))
+                                                                             x1 = col_skip()))
       beehive_df <- beehive_df_unfiltered
                              
     } else {
@@ -192,7 +188,7 @@ server <- function(input, output, session) {
                                  ticks = TRUE, animate = TRUE,
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)}
-  selectableFields <- c("weight", "temp1", "temp2", "hum1", "hum2", "delta_weight", "delta_temp1", "delta_hum1")
+  selectableFields <- c("weight", "temp_hive", "temp_out", "hum_hive", "hum_out", "delta_weight", "delta_temp_hive", "delta_hum_hive")
   selectField <- function (id="selectedField", val=NULL) {
                 selectInput(id,label="Merkmal auswählen",choice=selectableFields, selected=val, selectize=FALSE) }
   
@@ -249,7 +245,7 @@ server <- function(input, output, session) {
   output$histogramUI <- renderUI({
     tags$div(
       br(),
-      selectField(id="selectedFieldSummary", val="temp1"),
+      selectField(id="selectedFieldSummary", val="temp_hive"),
       tags$h3("Histogramm"),
       tags$p("Das Histogramm macht die absolute oder relative Häufigkeitsverteilung und Häufigkeitsdichte sichtbar."),
       plotOutput("histogramPlot"),
@@ -324,9 +320,10 @@ server <- function(input, output, session) {
     
     # Draw Zeitstrahl
     plot_ly(beehive_df, x = ~timestamp, y = ~weight, name = 'Gewicht [kg]', type = 'scatter', mode = 'lines+markers') %>%
-      add_trace(y = ~temp1, name = 'Temperatur Brutraum [°C]', mode = 'lines+markers') %>%
-      add_trace(y = ~temp2, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
-      add_trace(y = ~hum1, name = 'Luftfeuchte [%]', mode = 'lines+markers')  %>%
+      add_trace(y = ~temp_hive, name = 'Stocktemperatur [°C]', mode = 'lines+markers') %>%
+      add_trace(y = ~temp_out, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
+      add_trace(y = ~hum_hive, name = 'Luftfeuchte Innen [%]', mode = 'lines+markers')  %>%
+      add_trace(y = ~hum_out, name = 'Luftfeuchte Außen [%]', mode = 'lines+markers')  %>%
       filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
   })
   
@@ -410,41 +407,40 @@ server <- function(input, output, session) {
 
     # draw chart
     hc <- highchart(type = "stock") %>% 
-      # create axis :)
+      # create y-Axis
       hc_yAxis_multiples(
-        create_yaxis(1, height = c(2, 1), turnopposite = FALSE)
+        create_yaxis(2, height = c(4, 1), turnopposite = FALSE)
       ) %>% 
-      # series :D
-      hc_add_series(data=xts$temp1, yAxis = 0, name = "Temperatur Brutraum [°C]", type = "line") %>% 
-      hc_add_series(data=xts$temp2, yAxis = 0, name = "Temperatur Außen [°C]") %>% 
-      hc_add_series(data=xts$weight, yAxis = 0, name = "Gewicht [kg]") %>% 
-      hc_add_series(data=xts$hum1, color = "gray", yAxis = 0, name = "Luftfeuchte Innen [%]", type = "line") %>% 
-      hc_add_series(data=xts$hum2, yAxis = 0, name = "Luftfeuchte Außen [%]", color = hex_to_rgba("green", 0.7))
-      #hc_add_series(SPY.RSI.SellLevel, color = hex_to_rgba("red", 0.7),
-      #              yAxis = 2, name = "Sell level") %>% 
-      #hc_add_series(SPY.RSI.BuyLevel, color = hex_to_rgba("blue", 0.7),
-      #              yAxis = 2, name = "Buy level") 
-    # add theme
-    hc <- hc %>% hc_add_theme(hc_theme_darkunica())
-    # add plot options
-    hc <- hc %>% hc_plotOptions(series = list(
-                                   compare = "percent",
-                                   showInNavigator = TRUE
-                                 ))
-    # set rangeSelector
-    hc <- hc %>% hc_rangeSelector(
-        verticalAlign = "bottom",
-        selected = 0 # select month by default
-      )
-    # set tooltip
-    hc <- hc %>% hc_tooltip(
-               pointFormat = '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
-               valueDecimals = 2,
-               split =  TRUE,
-               crosshairs = TRUE)
-    
-    # return
-    hc
+      # add series for Axis 0
+      hc_add_series(data=xts$temp_hive, yAxis = 0, name = "Stocktemperatur [°C]", type = "line") %>% 
+      hc_add_series(data=xts$temp_out, yAxis = 0, name = "Temperatur Außen [°C]", type = "line") %>% 
+      hc_add_series(data=xts$weight, yAxis = 0, name = "Gewicht [kg]", type = "line", color = hex_to_rgba("green", 0.7)) %>% 
+      hc_add_series(data=xts$hum_hive, yAxis = 0, name = "Luftfeuchte Innen [%]", type = "line") %>% 
+      hc_add_series(data=xts$hum_out, yAxis = 0, name = "Luftfeuchte Außen [%]", type = "line") %>% 
+      # add series for Axis 2  
+      hc_add_series(data=xts$delta_weight, color = hex_to_rgba("red", 0.7),
+                    yAxis = 1, name = "Tageszuwachs [kg]", type = "line")
+      # add theme
+      hc <- hc %>% hc_add_theme(hc_theme_darkunica())
+      # add plot options
+      hc <- hc %>% hc_plotOptions(series = list(
+                                     compare = "percent",
+                                     showInNavigator = TRUE
+                                   ))
+      # set rangeSelector
+      hc <- hc %>% hc_rangeSelector(
+          verticalAlign = "bottom",
+          selected = 0 # select month by default
+        )
+      # set tooltip
+      hc <- hc %>% hc_tooltip(
+                 pointFormat = '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+                 valueDecimals = 2,
+                 split =  TRUE,
+                 crosshairs = TRUE)
+      
+      # return
+      hc
     
   })
   output$zeitreiheUI <- renderUI({

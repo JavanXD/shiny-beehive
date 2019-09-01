@@ -1,4 +1,4 @@
-timestamp,temp1,temp2,weight,hum1,x5,hum2,x7,x8,ticks
+timestamp,temp_hive,temp_out,hum_hive,hum_out,x1,weight,voltage_battery,voltage_solar,unixtime
 2018/04/05 07:59:10,14.76,10.40,66.58,79.10,,29.84,3.75,1.13,1522907950
 2018/04/05 08:00:45,14.67,10.40,65.98,79.20,,29.91,3.76,1.24,1522908045
 2018/04/05 08:15:45,14.19,10.40,64.21,79.20,,29.85,3.76,1.13,1522908945
