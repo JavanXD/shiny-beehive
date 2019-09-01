@@ -287,6 +287,16 @@ server <- function(input, output, session) {
     ) %>% hide_legend()
   })
   
+  output$monthlyBoxplotUI <- renderUI({
+    tags$div(
+      br(),
+      plotlyOutput("monthlyBoxplot"), 
+      br(),
+      p("Die einzelnen Ausreißer in den niedrigen Gewichtsbereich im April 2018, Mai 2018 und Juni 2018 zeigen deutlich die Arbeiten am Bienenstand. Dabei hat der Imker vermutlich einzelne Zargen abgenommen oder Honig geschleudert. Diese Ansicht zeigt beispielhaft den Gewichtsverlauf am Bienenstock, in welchen Sommermonaten ein Bienenvolk den meisten Honigertrag verzeichnet und wie stark das Gewicht innerhalb eines Monats varriert.")
+    )
+  })
+  
+  
   output$dailyBoxplot <- renderPlotly({
     
     # Abhängig von Konfiguration Zeitraum eingrenzen
@@ -307,9 +317,10 @@ server <- function(input, output, session) {
     tags$div(
       br(),
       selectDay(),
-      selectDaysCount(), 
-      plotlyOutput("dailyBoxplot"), 
-      p("Am 22. Mai muss der Imker arbeiten am Bienenvolk vorgenommen haben und den Honigraum heruntergenommen haben. Eventuell Schwarmkontrolle.")
+      selectDaysCount(val=54), 
+      plotlyOutput("dailyBoxplot"),
+      br(),
+      p("In der Woche vom 15. April bis 25. April hat es stark 'gehonigt'. Die Bienen haben fleißig über 10kg Honig eingebracht. Der Imker wartet den richtigen Zeitpunkt ab. Am 12. Mai muss der Imker arbeiten am Bienenvolk vorgenommen haben und den vollen Honigraum heruntergenommen haben. Dabei muss es sich um die Honigernte gehandelt haben. Daraufhin stellt er am 14. Mai die ausgeschleuderten Waben mit Zarge wieder auf den Bienenkasten. In den darauf folgenden Tagen nimmt das Gewicht am Bienenstand leicht ab. Es lässt sich vermuten, dass die Bienen zunächst den Resthonig aus den ausgeschleuderten Waben ausschlecken und verzehren. Möglicherweise war in der Woche auch schlechtes Wetter. Denn ändert man nun das Datum auf den 1. Juli 2019 kann man schnell erkennen, dass ab dem 8. Juni wieder einen Gewichtszuwachs verzeichnet wurde. Dies ist zu dieser Jahreszeit zu erwarten.")
     )
   })
   
@@ -352,8 +363,8 @@ server <- function(input, output, session) {
     
     # draw boxplot
     p <- plot_ly(alpha = 0.4, type = "histogram", autobinx = F, xbins = 25, autobiny = F, ybins = 25) %>%
-      add_histogram(x = ~beehive_df_weight1$delta_weight, name= "Zeitraum #1") %>%
-      add_histogram(x = ~beehive_df_weight2$delta_weight, name=  "Zeitraum #2") %>%
+      add_histogram(x = ~beehive_df_weight1$delta_weight, name= "Zeitraum #1", autobinx = F, xbins = 25, autobiny = F, ybins = 25) %>%
+      add_histogram(x = ~beehive_df_weight2$delta_weight, name=  "Zeitraum #2", autobinx = F, xbins = 25, autobiny = F, ybins = 25) %>%
       layout(barmode = "overlay") %>% 
       layout(xaxis = list(title = "Gewichtsdifferenz [g]"), yaxis = list(title = "Anzahl")) %>% 
       layout(xaxis = list(range = c(-150, 150))) # by default zoom in
@@ -367,6 +378,7 @@ server <- function(input, output, session) {
       selectDay(id="selectedDayGewichtsDeltas2", val="2019-07-1", text= "Datum für Zeitraum 2"),
       selectDaysCount(val=14), 
       plotlyOutput("gewichtsDeltas"),
+      br(),
       p("Anhand der Häufigkeitsverteilung können Gewichtszu-  und Abnahmen als Links- und Rechtssteil oder Symmetrisch festgestellt werden. Außerdem ist ersichtlich wie ein Zeitraum gegenüber einem anderen Zeitraum performt (Honigertrag) hat.")
     )
   })
