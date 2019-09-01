@@ -36,11 +36,11 @@ server <- function(input, output, session) {
     df <- subset(df, !is.na(weight))
     
     # berechne differenzen zwischen reihen
-    delta_weight <- diff(df$weight[order(df$unixtime)]) * 1000 # convert kg to g
-    delta_temp_hive <- diff(df$temp_hive[order(df$unixtime)])
-    delta_temp_out <- diff(df$temp_out[order(df$unixtime)])
-    delta_hum_hive <- diff(df$hum_hive[order(df$unixtime)])
-    delta_hum_out <- diff(df$hum_out[order(df$unixtime)])
+    delta_weight <- diff(df$weight[order(df$timestamp)]) * 1000 # convert kg to g
+    delta_temp_hive <- diff(df$temp_hive[order(df$timestamp)])
+    delta_temp_out <- diff(df$temp_out[order(df$timestamp)])
+    delta_hum_hive <- diff(df$hum_hive[order(df$timestamp)])
+    delta_hum_out <- diff(df$hum_out[order(df$timestamp)])
     # delete first row
     df <- df[-1,] 
     df$delta_weight <- round(delta_weight, digits=4)
@@ -131,7 +131,7 @@ server <- function(input, output, session) {
     
   })
   
-  forecast_model <- function(){
+  forecast_model <- function(selectedField){
     
     # Filter Zeitraum
     # Abhängig von Konfiguration Zeitraum eingrenzen
@@ -160,9 +160,11 @@ server <- function(input, output, session) {
     # Fehler: Zeitreihe hat keine oder weniger als 2 Perioden
     # => zurück zum exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion.
     # Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren  Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? Wenn Sie für Ihre Zeitreihe diesem  Gedanken zustimmen können, ist die Methodik des exponentiellem Glättens wahrscheinlich die Richtige für Sie!
-    time_series_vorhersage <- HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
     #plot(time_series_vorhersage)
-    hw_plot <- as.ggplot(function() plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5"))
+    hw_plot <- as.ggplot(function() {
+      time_series_vorhersage <- HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
+      plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5")
+      })
     
     
     m <- stats::HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
@@ -190,8 +192,8 @@ server <- function(input, output, session) {
                                  width = NULL, sep = ",", pre = NULL, post = NULL, timeFormat = NULL,
                                  timezone = NULL, dragRange = TRUE)}
   selectableFields <- c("weight", "temp_hive", "temp_out", "hum_hive", "hum_out", "delta_weight", "delta_temp_hive", "delta_hum_hive")
-  selectField <- function (id="selectedField", val=NULL) {
-                selectInput(id,label="Merkmal auswählen",choice=selectableFields, selected=val, selectize=FALSE) }
+  selectField <- function (id="selectedField", val=NULL, text="Merkmal auswählen") {
+                selectInput(id,label=text,choice=selectableFields, selected=val, selectize=FALSE) }
   
   ########################################
   # UI-Komponenten ausgeben
@@ -237,11 +239,12 @@ server <- function(input, output, session) {
   })
   output$scatterPlot <- renderPlot({
     field <- input$selectedFieldSummary
+    field2 <- input$selectedFieldSummary2
     y <- beehive_df[[field]]
-    x <- beehive_df$weight  
+    x <- beehive_df[[field2]]  
     plot(x, y,       
             ylab=paste("Ausgewähltes Merkmal: ", toString(field)),
-            xlab="Gewicht [kg]")
+            xlab=paste("Ausgewähltes Merkmal: ", toString(field2)))
   })
   output$histogramUI <- renderUI({
     tags$div(
@@ -255,6 +258,7 @@ server <- function(input, output, session) {
       plotOutput("qqPlot"),
       tags$h3("Scatter Plot"),
       tags$p("Das Scatterplot trägt zwei quantiative Merkmale im Koordinatensystem gegeneinander ab und lässt Zusammenhänge vermuten."),
+      selectField(id="selectedFieldSummary2", val="hum_hive", text ="2. Merkmal auswählen"),
       plotOutput("scatterPlot")
     )
   })
@@ -370,10 +374,11 @@ server <- function(input, output, session) {
     )
   })
 
-  output$plotgraph1 <- renderPlot({forecast_model()[1]})
-  output$plotgraph2 <- renderPlot({forecast_model()[2]})
-  output$plotgraph3 <- renderPlot({forecast_model()[3]})
-  output$plotgraph4 <- renderPlot({forecast_model()[4]})
+  forecast_field <- beehive_df$weight
+  output$plotgraph1 <- renderPlot({forecast_model(forecast_field)[1]})
+  output$plotgraph2 <- renderPlot({forecast_model(forecast_field)[2]})
+  output$plotgraph3 <- renderPlot({forecast_model(forecast_field)[3]})
+  output$plotgraph4 <- renderPlot({forecast_model(forecast_field)[4]})
 
   output$zeitreihenanalyseUI <- renderUI({
     tags$div(
