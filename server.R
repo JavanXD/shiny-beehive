@@ -300,8 +300,8 @@ server <- function(input, output, session) {
   output$dailyBoxplot <- renderPlotly({
     
     # Abhängig von Konfiguration Zeitraum eingrenzen
-    date_end_date <- as.Date(input$selectedDay)
-    date_start_date <- ymd(date_end_date) - days(input$selectedDaysCount)
+    date_end_date <- as.Date(input$selectedDayDailyBoxplot)
+    date_start_date <- ymd(date_end_date) - days(input$selectedDaysCountDailyBoxplot)
     
     beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
     
@@ -316,8 +316,8 @@ server <- function(input, output, session) {
   output$dailyBoxplotUI <- renderUI({
     tags$div(
       br(),
-      selectDay(),
-      selectDaysCount(val=54), 
+      selectDay(id="selectedDayDailyBoxplot"),
+      selectDaysCount(id="selectedDaysCountDailyBoxplot", val=54), 
       plotlyOutput("dailyBoxplot"),
       br(),
       p("In der Woche vom 15. April bis 25. April hat es stark 'gehonigt'. Die Bienen haben fleißig über 10kg Honig eingebracht. Der Imker wartet den richtigen Zeitpunkt ab. Am 12. Mai muss der Imker arbeiten am Bienenvolk vorgenommen haben und den vollen Honigraum heruntergenommen haben. Dabei muss es sich um die Honigernte gehandelt haben. Daraufhin stellt er am 14. Mai die ausgeschleuderten Waben mit Zarge wieder auf den Bienenkasten. In den darauf folgenden Tagen nimmt das Gewicht am Bienenstand leicht ab. Es lässt sich vermuten, dass die Bienen zunächst den Resthonig aus den ausgeschleuderten Waben ausschlecken und verzehren. Möglicherweise war in der Woche auch schlechtes Wetter. Denn ändert man nun das Datum auf den 1. Juli 2019 kann man schnell erkennen, dass ab dem 8. Juni wieder einen Gewichtszuwachs verzeichnet wurde. Dies ist zu dieser Jahreszeit zu erwarten.")
