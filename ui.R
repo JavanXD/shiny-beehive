@@ -77,41 +77,58 @@ info <- tags$div(
             )
 )
 start <- fluidRow(
-  column(3,
+  column(4,
          box(
            title = "Datenerhebung", width = NULL, solidHeader = FALSE, status = "warning",
            "Die bereits vorliegenden Messdaten stammen von einem Bienenstand-Monitoring-System. Dabei messen Sensoren im und am Bienenstand Umwelteinflüsse, wie die Temperatur, die Luftfeuchtigkeit und das Gewicht des Bienenstands. Dieses Monitoring System ist modular, sodass weitere Sensorenarten wie Luftdruck, Regenmenge und Luftqualität ergänzt werden können. Eine weitere Ergänzung wäre beispielsweise das hinzufügen weiterer Temperatursensoren innerhalb jeder Wabengasse um die Bewegung der Wintertraube im Bienenstand zu erfassen. Die Messungen finden kontinuierlich, beispielsweise in einem Zyklus von alle 30 Minuten statt."
          )
   ),
-  column(3,
+  column(4,
          box(
            title = "Statistische Einheit und Merkmale", width = NULL, solidHeader = FALSE, status = "warning",
-           tags$h3("Bescheibung der Felder"),
-           "hum1 - Luftfeuchte, hum2, weight, temp1, temp2",
-           tags$h3("Notwendige Felder"),
-           "hum1, hum2, weight, temp1, temp2",
-           tags$h3("Datenerhebung"),
-           "hum1, hum2, weight, temp1, temp2"
+           HTML(
+"<strong>Beschreibung der Merkmale</strong>
+<ul>
+<li><strong>timestamp</strong>: <i>nicht häufbar, diskret, nicht-klassiert, quantitaves Merkmal [Zeitstempel] </i> <br>- Uhrzeit zum Zeitpunkt der Messung</li>
+<li><strong>weight</strong>: <i>metrisch, stetig, quantiatives Merkmal [kg] </i> <br>- gemessenes Gewicht des Bienenstandes</li>
+<li><strong>temp_hive</strong>: <i>metrisch, stetig, quantiatives Merkmal [°C] </i> <br>- gemessene Stocktemperatur im Bienenstock</li>
+<li><strong>temp_out</strong>: <i>metrisch, stetig, quantiatives Merkmal [°C] </i> <br>- gemessene Außentemperatur am Bienenstand</li>
+<li><strong>hum_hive</strong>: <i>metrisch, stetig, quantiatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit im Bienenstock</li>
+<li><strong>hum_out</strong>: <i>metrisch, stetig, quantiatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit am Bienenstande</li>
+<li><strong>delta_weight</strong>: <i>metrisch, quantiatives Merkmal [g] </i> <br>- Gewichtsdifferenz zum vorangegangenen Messergebnis</li>
+</ul>"
+           )
          )
   ),
-  column(3,
+  column(4,
          box(
            title = "Bemerkung", width = NULL, solidHeader = FALSE, status = "warning",
            "Der Quellcode der Shiny App ist bisher noch relativ statisch, sodass der importierte Datensatz in einem ganz bestimmten Format vorliegen muss. Daher müssen auch die Header-Felder der CSV-Datei noch mindestens die beschriebenen Merkmale enthalten."
          )
   ),
-  column(3,
+  column(4,
          box(
            title = "Changelog", width = NULL, solidHeader = FALSE, status = "warning",
-           "tbd"
+           HTML(
+"
+<ul>
+<li><strong>2019/09/09</strong> Erste MVP Version</li>
+</ul>")
          )
   ),
-  column(3,
+  column(4,
          box(
-           title = "To-Dos", width = NULL, solidHeader = FALSE, status = "warning",
-           "- Das Unterstützen weiterer Uploadmöglichkeiten der Messdaten (MySql-Verbindung)",
-           "- ThingSpeak Anbindung",
-           "- Dadurch soll eine Livevisualisierung ermöglicht werden"
+           title = "To-Do's (Roadmap)", width = NULL, solidHeader = FALSE, status = "warning",
+           HTML(
+             '
+<ul>
+<li>Das Unterstützen weiterer Uploadmöglichkeiten der Messdaten. Dadurch kann eine Livevisualisierung ermöglicht werden.
+  <ul>
+      <li><a href="https://www.honey-pi.de/messdaten-visualisieren-und-auswerten/">HoneyPi und ThingSpeak Anbindung</a></li>
+      <li>Online CSV Import per URL (ähnlich wie in der <a href="https://www.honey-pi.de/honeypi-ios-app/">PWA</a>)</li>
+  </ul>
+</li>
+</ul>')
          )
   )
 )
