@@ -30,12 +30,13 @@ server <- function(input, output, session) {
   
   treat_df <- function(df) {
     # TODO: Zeile in Produktion entfernen. 
-    df <- subset(df, weight != 100) # Demo: Im Datensatz sind viele Test/Kalibrierungsmessungen mit 100kg. Die müssen rausgefiltert werden.
+    df <- subset(df, hum_hive != 100)
+    df <- subset(df, !is.na(hum_hive))
     df <- subset(df, !is.na(hum_out))
     df <- subset(df, !is.na(weight))
     
     # berechne differenzen zwischen reihen
-    delta_weight <- diff(df$weight[order(df$unixtime)])
+    delta_weight <- diff(df$weight[order(df$unixtime)]) * 1000 # convert kg to g
     delta_temp_hive <- diff(df$temp_hive[order(df$unixtime)])
     delta_temp_out <- diff(df$temp_out[order(df$unixtime)])
     delta_hum_hive <- diff(df$hum_hive[order(df$unixtime)])
@@ -349,10 +350,12 @@ server <- function(input, output, session) {
     
     
     # draw boxplot
-    p <- plot_ly(alpha = 0.4) %>%
+    p <- plot_ly(alpha = 0.4, type = "histogram", autobinx = F, xbins = 25, autobiny = F, ybins = 25) %>%
       add_histogram(x = ~beehive_df_weight1$delta_weight, name= "Zeitraum #1") %>%
       add_histogram(x = ~beehive_df_weight2$delta_weight, name=  "Zeitraum #2") %>%
-      layout(barmode = "overlay") %>% layout(xaxis = list(title = ""), yaxis = list(title = "Anzahl"))
+      layout(barmode = "overlay") %>% 
+      layout(xaxis = list(title = "Gewichtsdifferenz [g]"), yaxis = list(title = "Anzahl")) %>% 
+      layout(xaxis = list(range = c(-150, 150))) # by default zoom in
     
   })
   
@@ -408,20 +411,24 @@ server <- function(input, output, session) {
     # draw chart
     hc <- highchart(type = "stock") %>% 
       # create y-Axis
-      hc_yAxis_multiples(
-        create_yaxis(2, height = c(4, 1), turnopposite = FALSE)
-      ) %>% 
+      # hc_yAxis_multiples(
+      #   list(title = list(text = "Messdaten"), lineWidth = 3),
+      #   list(title = list(text = "Gewichtsdifferenz"), showLastLabel = FALSE, opposite = TRUE)
+      # ) %>% 
+      #hc_yAxis_multiples(
+      #  create_yaxis(1, height = c(2, 1), turnopposite = TRUE)
+      #) %>% 
+      hc_yAxis(max = 120, min = -15, opposite = TRUE) %>% 
       # add series for Axis 0
-      hc_add_series(data=xts$temp_hive, yAxis = 0, name = "Stocktemperatur [°C]", type = "line") %>% 
-      hc_add_series(data=xts$temp_out, yAxis = 0, name = "Temperatur Außen [°C]", type = "line") %>% 
-      hc_add_series(data=xts$weight, yAxis = 0, name = "Gewicht [kg]", type = "line", color = hex_to_rgba("green", 0.7)) %>% 
-      hc_add_series(data=xts$hum_hive, yAxis = 0, name = "Luftfeuchte Innen [%]", type = "line") %>% 
-      hc_add_series(data=xts$hum_out, yAxis = 0, name = "Luftfeuchte Außen [%]", type = "line") %>% 
+      hc_add_series(data=xts$temp_hive, name = "Stocktemperatur [°C]", type = "line") %>% 
+      hc_add_series(data=xts$temp_out, name = "Temperatur Außen [°C]", type = "line") %>% 
+      hc_add_series(data=xts$weight, name = "Gewicht [kg]", type = "line", color = hex_to_rgba("black", 0.7)) %>% 
+      hc_add_series(data=xts$hum_hive, name = "Luftfeuchte Innen [%]", type = "line") %>% 
+      hc_add_series(data=xts$hum_out, name = "Luftfeuchte Außen [%]", type = "line")
       # add series for Axis 2  
-      hc_add_series(data=xts$delta_weight, color = hex_to_rgba("red", 0.7),
-                    yAxis = 1, name = "Tageszuwachs [kg]", type = "line")
+      #hc_add_series(data=xts$delta_weight, yAxis = 1, name = "Zuwachs/Abnahme [g]", type = "line", color = hex_to_rgba("grey", 0.7))
       # add theme
-      hc <- hc %>% hc_add_theme(hc_theme_darkunica())
+      hc <- hc %>% hc_add_theme(hc_theme_google())
       # add plot options
       hc <- hc %>% hc_plotOptions(series = list(
                                      compare = "percent",
