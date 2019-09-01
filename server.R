@@ -131,7 +131,7 @@ server <- function(input, output, session) {
     
   })
   
-  forecast_model <- function(selectedField){
+  forecast_model <- function(){
     
     # Filter Zeitraum
     # Abhängig von Konfiguration Zeitraum eingrenzen
@@ -151,22 +151,19 @@ server <- function(input, output, session) {
     # Grafische Analyse der Zeitreihe
     TS <- ts(time_series, frequency = count_days)
     
-    # In R gibt es eine Funktion, mit deren Hilfe man Zeitreihen in die drei Komponenten Trend, Saisonalität und zufällige Fluktuationen aufteilen kann:
+    # In Trend, Saisonalität und zufällige Fluktuationen aufteilen
     time_series_components <- decompose(TS)
     
     # Der Rückgabewert time_series_components dieser Funktion enthält eine Liste, welcher verschiedene Komponenten enthält. Ein Plot dieser Liste zeigt Folgendes:
     components_plot <- as.ggplot(function()  plot(time_series_components))
     
-    # Fehler: Zeitreihe hat keine oder weniger als 2 Perioden
-    # => zurück zum exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion.
-    # Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren  Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? Wenn Sie für Ihre Zeitreihe diesem  Gedanken zustimmen können, ist die Methodik des exponentiellem Glättens wahrscheinlich die Richtige für Sie!
-    #plot(time_series_vorhersage)
+    # Expotentielles Glätten
     hw_plot <- as.ggplot(function() {
       time_series_vorhersage <- HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
       plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5")
-      })
+    })
     
-    
+    # HoltWInters forecast
     m <- stats::HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
     forecast_data <- forecast(m, h=14)
     forecast_plot <- as.ggplot(function()  plot(forecast_data))
@@ -374,21 +371,28 @@ server <- function(input, output, session) {
     )
   })
 
-  forecast_field <- beehive_df$weight
-  output$plotgraph1 <- renderPlot({forecast_model(forecast_field)[1]})
-  output$plotgraph2 <- renderPlot({forecast_model(forecast_field)[2]})
-  output$plotgraph3 <- renderPlot({forecast_model(forecast_field)[3]})
-  output$plotgraph4 <- renderPlot({forecast_model(forecast_field)[4]})
+  output$plotgraph1 <- renderPlot({forecast_model()[1]})
+  output$plotgraph2 <- renderPlot({forecast_model()[2]})
+  output$plotgraph3 <- renderPlot({forecast_model()[3]})
+  output$plotgraph4 <- renderPlot({forecast_model()[4]})
 
   output$zeitreihenanalyseUI <- renderUI({
     tags$div(
       br(),
       selectDay(id="selectedDayZeitreihenanlalyse", val="2019-04-01"),
       selectDaysCount(id="selectedCountZeitreihenanlalyse", val=4),
-      p(""),
+      p("Die Gewichtsdaten werden wie sie sind dargestellt. Außerdem eine regressions Gerade eingezeichnet."),
       plotOutput("plotgraph1"),
+      p("Es kann zum Fehler kommen, dass die Zeitreihe keine oder weniger als 2 Perioden hat.
+      Dann kann das exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion angewandt werden.
+      Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: 
+      Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? 
+      Wir wollen für unsere Zeitreihe diese Methodik des expotentiellen Glätten anschauen.
+      "),
       plotOutput("plotgraph2"),
+      p("In R gibt es eine Funktion, mit deren Hilfe man Zeitreihen in die drei Komponenten Trend, Saisonalität und zufällige Fluktuationen aufteilen kann."),
       plotOutput("plotgraph3"),
+      p("Im letzten Graphen ist mit blau die Prognose eingezeichnet. Die Prognose erfolgte mit dem Vorhersage Modell HoltWinters."),
       plotOutput("plotgraph4")
     )
   })
