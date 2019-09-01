@@ -11,16 +11,20 @@ library(forecast)
 library(pryr)
 library(ggplotify)
 
+# Highchart
+library(highcharter)
+library(xts)
+
 server <- function(input, output, session) {
   
   ########################################
   # Daten aufbereiten 
   ########################################
+  format <- "%Y/%m/%d %H:%M:%S"
   # import csv and skip unnecessary columns, set timeformat
-  
   beehive_df <- reactiveValues()
   beehive_df <- read_csv("beehive.csv", col_types = cols(ticks = col_number(), 
-                                                      timestamp = col_datetime(format = "%Y/%m/%d %H:%M:%S"), 
+                                                      timestamp = col_datetime(format = format), 
                                                       x5 = col_skip(),
                                                       x7 = col_skip(),
                                                       x8 = col_skip()))
@@ -98,7 +102,7 @@ server <- function(input, output, session) {
       #                        header = input$fileuploadHeader,
       #                        sep = input$fileuploadSep)
       beehive_df_unfiltered <<- read_csv(input$fileuploadFile$datapath, col_types = cols(ticks = col_number(), 
-                                                                             timestamp = col_datetime(format = "%Y/%m/%d %H:%M:%S"), 
+                                                                             timestamp = col_datetime(format = format), 
                                                                              x5 = col_skip(),
                                                                              x7 = col_skip(),
                                                                              x8 = col_skip()))
@@ -384,6 +388,73 @@ server <- function(input, output, session) {
     )
   })
 
+  output$highchartPlot <- renderHighchart({
+    
+    #beehive_df[1] <- NULL # remove first clumn
+    #beehive_df <- beehive_df[, c(7,1,2,3,4,5,6)] # reorder columns
+    # create unix timestamp from date
+    #beehive_df$Date <- as.POSIXct(strptime(beehive_df$timestamp,format),tz="UTC")
+
+    # Test Dataframe
+    df2 <- data_frame(
+      #date = c(1460648544, 1460574864, 1460665314),
+      date = c(as.Date("2018-04-05 08:00:45"), as.Date("2018-05-05 08:00:45"), as.Date("2018-06-05 08:00:45")),
+      value = c(4, 4, 4.2),
+      variable = c(1, 2, 3)
+    )
+    # convert unix to date
+    #df2 <- mutate(df2, date=as.POSIXct(as.numeric(as.character(date)),origin="1970-01-01"))
+    # convert data frame to ts
+    #xts2 <- xts(df2[,-1], order.by=df2$date)
+    xts <- xts(beehive_df[,-1], order.by=beehive_df$timestamp)
+
+    # draw chart
+    hc <- highchart(type = "stock") %>% 
+      # create axis :)
+      hc_yAxis_multiples(
+        create_yaxis(1, height = c(2, 1), turnopposite = FALSE)
+      ) %>% 
+      # series :D
+      hc_add_series(data=xts$temp1, yAxis = 0, name = "Temperatur Brutraum [°C]", type = "line") %>% 
+      hc_add_series(data=xts$temp2, yAxis = 0, name = "Temperatur Außen [°C]") %>% 
+      hc_add_series(data=xts$weight, yAxis = 0, name = "Gewicht [kg]") %>% 
+      hc_add_series(data=xts$hum1, color = "gray", yAxis = 0, name = "Luftfeuchte Innen [%]", type = "line") %>% 
+      hc_add_series(data=xts$hum2, yAxis = 0, name = "Luftfeuchte Außen [%]", color = hex_to_rgba("green", 0.7))
+      #hc_add_series(SPY.RSI.SellLevel, color = hex_to_rgba("red", 0.7),
+      #              yAxis = 2, name = "Sell level") %>% 
+      #hc_add_series(SPY.RSI.BuyLevel, color = hex_to_rgba("blue", 0.7),
+      #              yAxis = 2, name = "Buy level") 
+    # add theme
+    hc <- hc %>% hc_add_theme(hc_theme_darkunica())
+    # add plot options
+    hc <- hc %>% hc_plotOptions(series = list(
+                                   compare = "percent",
+                                   showInNavigator = TRUE
+                                 ))
+    # set rangeSelector
+    hc <- hc %>% hc_rangeSelector(
+        verticalAlign = "bottom",
+        selected = 0 # select month by default
+      )
+    # set tooltip
+    hc <- hc %>% hc_tooltip(
+               pointFormat = '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+               valueDecimals = 2,
+               split =  TRUE,
+               crosshairs = TRUE)
+    
+    # return
+    hc
+    
+  })
+  output$zeitreiheUI <- renderUI({
+    tags$div(
+      highchartOutput("highchartPlot"),
+      br(),
+      HTML('<p>Die Visualisierung erfolgt mit <a href="https://www.highcharts.com/stock/demo/compare/dark-unica" target="_blank" rel="noopener">Highcharts (Highstock)</a>.')
+    )
+  })
+  
   output$about <- renderUI({
     tags$div(
       br(),

@@ -128,6 +128,16 @@ body <- dashboardBody(tabItems(
             dashboard
           )
   ),
+  tabItem(tabName = "zeitreihe",
+          fluidRow(
+            column(12,
+                   box(
+                     title = "Zeitreihe", width = NULL, solidHeader = FALSE, status = "warning",
+                     uiOutput("zeitreiheUI")
+                   )
+            )
+          )
+  ),
   tabItem(tabName = "rawdata",
           fluidRow(
             column(4,
@@ -172,6 +182,7 @@ sidebar <- dashboardSidebar(collapsed = FALSE,
                             sidebarMenu(id = "tabs",
                               menuItem("Startseite", tabName = "start", icon = icon("info-circle")),
                               menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+                              menuItem("Zeitreihe", tabName = "zeitreihe", icon = icon("chart-line")),
                               menuItem("Messdaten", tabName = "rawdata", icon = icon("table"))
                             ), 
                             #controlls, 
@@ -196,13 +207,13 @@ footer <- tags$footer(tags$div("",
                                             onclick = sprintf("window.open('%s')", url_shiny))), 
                       align = "center", 
                       style = "
-    position: relative; 
+    position: relative;
     text-align:right;
     width: 100%;
     bottom: 0;
     color: white;
     background-color: #222d32;
-    height:55px;   /* Height of the footer */
+    height:55px;
     color: white;
     padding: 10px;
     z-index: 1000;")
@@ -214,23 +225,6 @@ ui <- tagList(
   body
   ),
   footer
-)
-########################################
-# Altes Shiny Layout [einfach unten shinyUI(oldui) ausführen]
-########################################
-oldui <- navbarPage("Bienenstand Shiny App",
-           tabPanel("Start",
-              fluidPage(
-                sidebarLayout(
-                  sidebarPanel(
-                    upload,
-                    controlls, 
-                    info
-                  ),
-                  mainPanel(dashboard)
-                )
-              )
-            )
 )
 
 ########################################
