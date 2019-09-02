@@ -310,7 +310,9 @@ server <- function(input, output, session) {
              y = ~weight, 
              x = reorder(format(beehive_df$timestamp,'%d %B %y'), beehive_df$timestamp),
              type = "box",
-             boxpoints = "suspectedoutliers") %>% layout(yaxis = list(title = "Gewicht [kg]")) %>% hide_legend()
+             boxpoints = "suspectedoutliers") %>% 
+      layout(yaxis = list(title = "Gewicht [kg]")) %>% 
+      hide_legend()
   })
   
   output$dailyBoxplotUI <- renderUI({
@@ -337,7 +339,7 @@ server <- function(input, output, session) {
       add_trace(y = ~temp_out, name = 'Temperatur Außen [°C]', mode = 'lines+markers') %>%
       add_trace(y = ~hum_hive, name = 'Luftfeuchte Innen [%]', mode = 'lines+markers')  %>%
       add_trace(y = ~hum_out, name = 'Luftfeuchte Außen [%]', mode = 'lines+markers')  %>%
-      filter(timestamp >= as.Date("2019-01-05")) %>% layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
+      layout(xaxis = list(title = "Datum"), yaxis = list(title = ""))
   })
   
   output$zeitstrahlUI <- renderUI({
@@ -374,17 +376,17 @@ server <- function(input, output, session) {
   output$gewichtsDeltasDailyPlot <- renderPlotly({
     
     # Abhängig von Konfiguration Zeitraum eingrenzen
-    date_end_date1 <- as.Date(input$selectedDayGewichtsDeltas)
-    date_start_date1 <- ymd(date_end_date1) - days(input$selectedDaysCount)
+    date_end_date <- as.Date(input$selectedDayGewichtsDeltas)
+    date_start_date <- ymd(date_end_date) - days(input$selectedDaysCount)
     
-    beehive_df_sub <- subset(beehive_df, timestamp >= date_start_date1 & timestamp <= date_end_date1)
+    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
 
-    beehive_df_daily <- beehive_df_sub %>%
+    beehive_df_daily <- beehive_df %>%
       mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
       group_by(dt, month, year) %>% 
       summarise(weight_sum = sum(delta_weight), weight_mean = mean(weight))
-    
     #View(beehive_df_daily)
+    
     x <- beehive_df_daily$dt
     y <- beehive_df_daily$weight_sum
     p <- plot_ly(beehive_df_daily, x = ~x, y = ~y, type = 'bar', color = I("orange")) %>%
@@ -393,6 +395,62 @@ server <- function(input, output, session) {
              yaxis = list(title = "Gewichtsveränderung [g]",
                           range = c(-3000, 3000))
              )
+  })
+  
+  output$gewichtsVerlaufDailyPlot <- renderPlotly({
+    
+    # Abhängig von Konfiguration Zeitraum eingrenzen
+    date_end <- as.Date(input$selectedDayGewichtsDeltas)
+    date_stop1 <- ymd(date_end) - days(1)
+    date_stop2 <- ymd(date_stop1) - days(1)
+    date_stop3 <- ymd(date_stop2) - days(1)
+    date_stop4 <- ymd(date_stop3) - days(1)
+    date_stop5 <- ymd(date_stop4) - days(1)
+
+    
+    beehive_df1 <- subset(beehive_df, timestamp >= date_stop1 & timestamp <= date_end)
+    beehive_df2 <- subset(beehive_df, timestamp >= date_stop2 & timestamp <= date_stop1)
+    beehive_df3 <- subset(beehive_df, timestamp >= date_stop3 & timestamp <= date_stop2)
+    beehive_df4 <- subset(beehive_df, timestamp >= date_stop4 & timestamp <= date_stop3)
+    beehive_df5 <- subset(beehive_df, timestamp >= date_stop5 & timestamp <= date_stop4)
+    
+    beehive_df_hourly1 <- beehive_df1 %>%
+      mutate(Date = ymd_hms(timestamp), hour = hour(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+      group_by(hour, dt, month, year) %>% 
+      summarise(weight1 = round(mean(weight), 4))
+    beehive_df_hourly2 <- beehive_df2 %>%
+      mutate(Date = ymd_hms(timestamp), hour = hour(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+      group_by(hour, dt, month, year) %>% 
+      summarise(weight2 = round(mean(weight), 4))
+    beehive_df_hourly3 <- beehive_df3 %>%
+      mutate(Date = ymd_hms(timestamp), hour = hour(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+      group_by(hour, dt, month, year) %>% 
+      summarise(weight3 = round(mean(weight), 4))
+    beehive_df_hourly4 <- beehive_df4 %>%
+      mutate(Date = ymd_hms(timestamp), hour = hour(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+      group_by(hour, dt, month, year) %>% 
+      summarise(weight4 = round(mean(weight), 4))
+    beehive_df_hourly5 <- beehive_df5 %>%
+      mutate(Date = ymd_hms(timestamp), hour = hour(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+      group_by(hour, dt, month, year) %>% 
+      summarise(weight5 = round(mean(weight), 4))
+    #View(beehive_df_hourly1)
+    #View(beehive_df_hourly2)
+    
+    # merge dataframes into one
+    final_df <- merge(beehive_df_hourly1[0:24,c(1,5)],beehive_df_hourly2[0:24,c(1,5)], all.x = TRUE,all.y = TRUE, by.y="hour")
+    final_df <- merge(final_df,beehive_df_hourly3[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
+    final_df <- merge(final_df,beehive_df_hourly4[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
+    final_df <- merge(final_df,beehive_df_hourly5[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
+    View(final_df)
+    
+    pal <- c("#4B0082", "#800080", "darkorchid", "blueviolet", "mediumorchid", "magenta")
+    plot_ly(final_df, x = ~hour, y = ~weight1, name = 'vor 1 Tag', type = 'scatter', mode = 'lines+markers', colors = pal) %>%
+      add_trace(x = ~hour, y = ~weight2, name = 'vor 2 Tagen', mode = 'lines+markers') %>%
+      add_trace(x = ~hour, y = ~weight3, name = 'vor 3 Tagen', mode = 'lines+markers') %>%
+      add_trace(x = ~hour, y = ~weight4, name = 'vor 4 Tagen', mode = 'lines+markers')  %>%
+      add_trace(x = ~hour, y = ~weight5, name = 'vor 5 Tagen', mode = 'lines+markers')  %>%
+      layout(xaxis = list(title = "Uhrzeit"), yaxis = list(title = "Gewicht [kg]"))
   })
   
   output$gewichtsDeltasUI <- renderUI({
@@ -407,7 +465,10 @@ server <- function(input, output, session) {
       p("Anhand der Häufigkeitsverteilung können Gewichtszu-  und Abnahmen als Links- und Rechtssteil oder Symmetrisch festgestellt werden. Außerdem ist ersichtlich wie ein Zeitraum gegenüber einem anderen Zeitraum performt (Honigertrag) hat."),
       br(),
       h3("Tägliche Gewichtsveränderungen"),
-      plotlyOutput("gewichtsDeltasDailyPlot")
+      plotlyOutput("gewichtsDeltasDailyPlot"),
+      br(),
+      h3("Gewicht der letzten 5 Tage"),
+      plotlyOutput("gewichtsVerlaufDailyPlot")
     )
   })
 
