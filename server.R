@@ -73,25 +73,37 @@ server <- function(input, output, session) {
   #View(beehive_df)
 
   ########################################
-  # Graphen zeichnen
+  # Tab Spearman berechnen via Spearman
   ########################################
   # Daniel erster Versuch. Zusammenhang nicht gut
-  firsttry = ggplot(beehive_df, aes(x = temp_hive, y = delta_weight)) + geom_point() + geom_smooth(method='lm') +
+  spearman = ggplot(beehive_df, aes(x = temp_out, y = weight)) + geom_point() + geom_smooth(method='lm') +
     labs(title = "Vorlage GEOM Daniel", 
          subtitle = "Erster Versuch", 
-         x = "Außentemperatur in Celsius", y = "Gewichtsdifferenz zum Vortag"
+         x = "Außentemperatur in Celsius", y = "Gewicht"
     )
-
+  
+  output$spearman <- renderPlot({
+    spearman
+  })
 
   ########################################
-  # Funktionen definieren, die für Graphen verwendet werden.
+  # Tab Korrelation berechnen via Spearman
   ########################################
   plotCor <- reactive({
     # Korrelation berechnen
-    correlation <- cor(beehive_df[,c("weight", "temp_hive", "temp_out", "hum_hive", "hum_out", "delta_weight", "delta_temp_hive", "delta_temp_out", "delta_hum_hive", "delta_hum_out")])
+    corrdataframe <- cor(beehive_df[,c("weight", "temp_hive", "temp_out", "hum_hive", "hum_out", "delta_weight", "delta_temp_hive", "delta_temp_out", "delta_hum_hive", "delta_hum_out")])
     # Korrelation visualisieren
-    corrplot(correlation, method = "ellipse", type = "upper", tl.srt = 45)
+    corspearman <- cor(corrdataframe, use="complete.obs", method="spearman") 
+    corrplot(corspearman, method = "ellipse", type = "upper", tl.srt = 45)
   })
+  
+  output$cor <- renderPlot({
+    plotCor()
+  })
+  
+  ########################################
+  # Funktionen definieren, die für Graphen verwendet werden.
+  ########################################
   
   change_dataframe <- reactive({
     # Read file ----
@@ -258,13 +270,7 @@ server <- function(input, output, session) {
       plotOutput("scatterPlot")
     )
   })
-  output$cor <- renderPlot({
-    plotCor()
-  })
-  output$firsttry <- renderPlot({
-    firsttry
-  })
-  
+
   output$monthlyBoxplot <- renderPlotly({
     # add month to df
     beehive_df$month <- format(beehive_df$timestamp, "%B %y")
