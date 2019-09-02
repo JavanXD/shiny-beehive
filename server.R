@@ -391,7 +391,7 @@ server <- function(input, output, session) {
     y <- beehive_df_daily$weight_sum
     p <- plot_ly(beehive_df_daily, x = ~x, y = ~y, type = 'bar', color = I("orange")) %>%
       layout(title = "",
-             xaxis = list(title = ""),
+             xaxis = list(title = "", type="date", tickmode="linear", tickangle=45),
              yaxis = list(title = "Gewichtsveränderung [g]",
                           range = c(-3000, 3000))
              )
@@ -442,7 +442,7 @@ server <- function(input, output, session) {
     final_df <- merge(final_df,beehive_df_hourly3[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
     final_df <- merge(final_df,beehive_df_hourly4[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
     final_df <- merge(final_df,beehive_df_hourly5[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
-    View(final_df)
+    #View(final_df)
     
     pal <- c("#4B0082", "#800080", "darkorchid", "blueviolet", "mediumorchid", "magenta")
     plot_ly(final_df, x = ~hour, y = ~weight1, name = 'vor 1 Tag', type = 'scatter', mode = 'lines+markers', colors = pal) %>%
@@ -450,7 +450,8 @@ server <- function(input, output, session) {
       add_trace(x = ~hour, y = ~weight3, name = 'vor 3 Tagen', mode = 'lines+markers') %>%
       add_trace(x = ~hour, y = ~weight4, name = 'vor 4 Tagen', mode = 'lines+markers')  %>%
       add_trace(x = ~hour, y = ~weight5, name = 'vor 5 Tagen', mode = 'lines+markers')  %>%
-      layout(xaxis = list(title = "Uhrzeit"), yaxis = list(title = "Gewicht [kg]"))
+      layout(xaxis = list(title = "Uhrzeit", tickmode="linear", tickformat="Uhr", range = c(0,23)), 
+             yaxis = list(title = "Gewicht [kg]"))
   })
   
   output$gewichtsDeltasUI <- renderUI({
