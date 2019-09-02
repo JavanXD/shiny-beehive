@@ -357,7 +357,7 @@ server <- function(input, output, session) {
     date_end_date2 <- as.Date(input$selectedDayGewichtsDeltas2)
     date_start_date2 <- ymd(date_end_date2) - days(input$selectedDaysCount)
     
-    beehive_df_weight1 <- subset(beehive_df, timestamp >= date_start_date1 & timestamp <= date_end_date2)
+    beehive_df_weight1 <- subset(beehive_df, timestamp >= date_start_date1 & timestamp <= date_end_date1)
     beehive_df_weight2 <- subset(beehive_df, timestamp >= date_start_date2 & timestamp <= date_end_date2)
     
     
@@ -371,15 +371,43 @@ server <- function(input, output, session) {
     
   })
   
+  output$gewichtsDeltasDailyPlot <- renderPlotly({
+    
+    # Abhängig von Konfiguration Zeitraum eingrenzen
+    date_end_date1 <- as.Date(input$selectedDayGewichtsDeltas)
+    date_start_date1 <- ymd(date_end_date1) - days(input$selectedDaysCount)
+    
+    beehive_df_sub <- subset(beehive_df, timestamp >= date_start_date1 & timestamp <= date_end_date1)
+
+    beehive_df_daily <- beehive_df_sub %>%
+      mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
+      group_by(dt, month, year) %>% 
+      summarise(weight_sum = sum(delta_weight), weight_mean = mean(weight))
+    
+    #View(beehive_df_daily)
+    x <- beehive_df_daily$dt
+    y <- beehive_df_daily$weight_sum
+    p <- plot_ly(beehive_df_daily, x = ~x, y = ~y, type = 'bar', color = I("orange")) %>%
+      layout(title = "",
+             xaxis = list(title = ""),
+             yaxis = list(title = "Gewichtsveränderung [g]",
+                          range = c(-3000, 3000))
+             )
+  })
+  
   output$gewichtsDeltasUI <- renderUI({
     tags$div(
       br(),
       selectDay(id="selectedDayGewichtsDeltas", val="2019-06-1", text= "Datum für Zeitraum 1"),
       selectDay(id="selectedDayGewichtsDeltas2", val="2019-07-1", text= "Datum für Zeitraum 2"),
-      selectDaysCount(val=14), 
+      selectDaysCount(val=14),
+      h3("Gewichtsveränderungen zweier Zeiträume vergleichen"),
       plotlyOutput("gewichtsDeltas"),
       br(),
-      p("Anhand der Häufigkeitsverteilung können Gewichtszu-  und Abnahmen als Links- und Rechtssteil oder Symmetrisch festgestellt werden. Außerdem ist ersichtlich wie ein Zeitraum gegenüber einem anderen Zeitraum performt (Honigertrag) hat.")
+      p("Anhand der Häufigkeitsverteilung können Gewichtszu-  und Abnahmen als Links- und Rechtssteil oder Symmetrisch festgestellt werden. Außerdem ist ersichtlich wie ein Zeitraum gegenüber einem anderen Zeitraum performt (Honigertrag) hat."),
+      br(),
+      h3("Tägliche Gewichtsveränderungen"),
+      plotlyOutput("gewichtsDeltasDailyPlot")
     )
   })
 
