@@ -250,10 +250,10 @@ server <- function(input, output, session) {
       tags$p("Das Histogramm macht die absolute oder relative Häufigkeitsverteilung und Häufigkeitsdichte sichtbar."),
       plotOutput("histogramPlot"),
       tags$h3("QQ-Plot"),
-      tags$p("Das Q-Q-Diagramm (bzw. Q-Q-Plot) ist eine Grafik, mir der eine quantiative Variable auf das Vorliegen einer Normalverteilung überprüft werden kann."),
+      tags$p("Das Q-Q-Diagramm (bzw. Q-Q-Plot) ist eine Grafik, mit der eine quantitative Variable auf das Vorliegen einer Normalverteilung überprüft werden kann."),
       plotOutput("qqPlot"),
       tags$h3("Scatter Plot"),
-      tags$p("Das Scatterplot trägt zwei quantiative Merkmale im Koordinatensystem gegeneinander ab und lässt Zusammenhänge vermuten."),
+      tags$p("Das Scatterplot trägt zwei quantitative Merkmale im Koordinatensystem gegeneinander ab und lässt Zusammenhänge vermuten."),
       selectField(id="selectedFieldSummary2", val="hum_hive", text ="2. Merkmal auswählen"),
       plotOutput("scatterPlot")
     )
@@ -291,7 +291,7 @@ server <- function(input, output, session) {
       br(),
       plotlyOutput("monthlyBoxplot"), 
       br(),
-      p("Die einzelnen Ausreißer in den niedrigen Gewichtsbereich im April 2018, Mai 2018 und Juni 2018 zeigen deutlich die Arbeiten am Bienenstand. Dabei hat der Imker vermutlich einzelne Zargen abgenommen oder Honig geschleudert. Diese Ansicht zeigt beispielhaft den Gewichtsverlauf am Bienenstock, in welchen Sommermonaten ein Bienenvolk den meisten Honigertrag verzeichnet und wie stark das Gewicht innerhalb eines Monats varriert.")
+      p("Die einzelnen Ausreißer in den niedrigen Gewichtsbereichen im April 2018, Mai 2018 und Juni 2018 zeigen deutlich die Arbeiten am Bienenstand. Dabei hat der Imker vermutlich einzelne Zargen abgenommen oder Honig geschleudert. Diese Ansicht zeigt beispielhaft den Gewichtsverlauf am Bienenstock, in welchen Sommermonaten ein Bienenvolk den meisten Honigertrag verzeichnet und wie stark das Gewicht innerhalb eines Monats variiert.")
     )
   })
   
@@ -321,7 +321,7 @@ server <- function(input, output, session) {
       selectDaysCount(id="selectedDaysCountDailyBoxplot", val=54), 
       plotlyOutput("dailyBoxplot"),
       br(),
-      p("In der Woche vom 15. April bis 25. April hat es stark 'gehonigt'. Die Bienen haben fleißig über 10kg Honig eingebracht. Der Imker wartet den richtigen Zeitpunkt ab. Am 12. Mai muss der Imker arbeiten am Bienenvolk vorgenommen haben und den vollen Honigraum heruntergenommen haben. Dabei muss es sich um die Honigernte gehandelt haben. Daraufhin stellt er am 14. Mai die ausgeschleuderten Waben mit Zarge wieder auf den Bienenkasten. In den darauf folgenden Tagen nimmt das Gewicht am Bienenstand leicht ab. Es lässt sich vermuten, dass die Bienen zunächst den Resthonig aus den ausgeschleuderten Waben ausschlecken und verzehren. Möglicherweise war in der Woche auch schlechtes Wetter. Denn ändert man nun das Datum auf den 1. Juli 2019 kann man schnell erkennen, dass ab dem 8. Juni wieder einen Gewichtszuwachs verzeichnet wurde. Dies ist zu dieser Jahreszeit zu erwarten.")
+      p("In der Woche vom 15. April bis 25. April hat es stark 'gehonigt'. Die Bienen haben fleißig über 10kg Honig eingebracht. Der Imker wartet den richtigen Zeitpunkt ab. Am 12. Mai muss der Imker Arbeiten am Bienenvolk vorgenommen haben und den vollen Honigraum heruntergenommen haben. Dabei muss es sich um die Honigernte gehandelt haben. Daraufhin stellt er am 14. Mai die ausgeschleuderten Waben mit Zarge wieder auf den Bienenkasten. In den darauffolgenden Tagen nimmt das Gewicht am Bienenstand leicht ab. Es lässt sich vermuten, dass die Bienen zunächst den Resthonig aus den ausgeschleuderten Waben ausschlecken und verzehren. Möglicherweise war in der Woche auch schlechtes Wetter. Denn ändert man nun das Datum auf den 1. Juli 2019 kann man schnell erkennen, dass ab dem 8. Juni wieder einen Gewichtszuwachs verzeichnet wurde. Dies ist zu dieser Jahreszeit zu erwarten.")
     )
   })
   
@@ -473,7 +473,7 @@ server <- function(input, output, session) {
       h3("Gewichtsveränderungen zweier Zeiträume vergleichen"),
       plotlyOutput("gewichtsDeltas"),
       br(),
-      p("Anhand der Häufigkeitsverteilung können Gewichtszu-  und Abnahmen als Links- und Rechtssteil oder Symmetrisch festgestellt werden. Außerdem ist ersichtlich wie ein Zeitraum gegenüber einem anderen Zeitraum performt (Honigertrag) hat."),
+      p("Anhand der Häufigkeitsverteilung können Gewichtszu-  und -abnahmen als Links- und Rechtssteil oder Symmetrisch festgestellt werden. Außerdem ist ersichtlich wie ein Zeitraum gegenüber einem anderen Zeitraum performt (Honigertrag)."),
       br(),
       h3("Tägliche Gewichtsveränderungen"),
       plotlyOutput("gewichtsDeltasDailyPlot"),
@@ -493,18 +493,18 @@ server <- function(input, output, session) {
       br(),
       selectDay(id="selectedDayZeitreihenanlalyse", val="2019-04-01"),
       selectDaysCount(id="selectedCountZeitreihenanlalyse", val=4),
-      p("Die Gewichtsdaten werden wie sie sind dargestellt. Außerdem eine regressions Gerade eingezeichnet."),
+      p("Die Gewichtsdaten werden wie sie sind dargestellt. Zusätzlich ist eine Regressionsgerade eingezeichnet."),
       plotOutput("plotgraph1"),
       p("Es kann zum Fehler kommen, dass die Zeitreihe keine oder weniger als 2 Perioden hat.
       Dann kann das exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion angewandt werden.
       Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: 
       Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? 
-      Wir wollen für unsere Zeitreihe diese Methodik des expotentiellen Glätten anschauen.
+      Wir wollen für unsere Zeitreihe diese Methodik des exponentiellen Glätten anschauen.
       "),
       plotOutput("plotgraph2"),
       p("In R gibt es eine Funktion, mit deren Hilfe man Zeitreihen in die drei Komponenten Trend, Saisonalität und zufällige Fluktuationen aufteilen kann."),
       plotOutput("plotgraph3"),
-      p("Im letzten Graphen ist mit blau die Prognose eingezeichnet. Die Prognose erfolgte mit dem Vorhersage Modell HoltWinters."),
+      p("Im letzten Graphen ist mit blau die Prognose eingezeichnet. Die Prognose erfolgte mit dem Vorhersagemodell HoltWinters."),
       plotOutput("plotgraph4")
     )
   })
@@ -579,25 +579,6 @@ server <- function(input, output, session) {
     )
   })
   
-  output$about <- renderUI({
-    tags$div(
-      br(),
-      tags$h1("About"),
-      "Fragestellungen die beantwortet werden sollen:",
-      br(),
-      "Zusammenhang zwischen Temperatur und Honigproduktion / Ertrag",
-      br(),
-      "Darstellen an welchen Tagen der Imker da war und Honig entnommen hat?",
-      br(),
-      "Darstellen an welchen Tagen es geregnet hat und kein Honig gesammelt wurde?",
-      tags$h2("Data"),
-      "Beschreibung woher die Daten kommen",
-      tags$h2("Summary"),
-      "Zeigt die Summary Funktion",
-      tags$h2("Corr"),
-      "Zeigt die Korrelation"
-      )
-  })
     
   ########################################
   # Weitere UI Utilities

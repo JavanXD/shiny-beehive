@@ -70,17 +70,14 @@ info <- tags$div(
           tags$hr(style="color:#a1afb6;background-color:#a1afb6;border-color:#a1afb6"),
           # Div mit Copyrights         
           tags$div(style="padding:10px;color:#a1afb6",
-            HTML(paste("Die HoneyPi Shiny App dient zur Visualisierung von Messdaten von Bienenstand-Monitoring-Systemen. Der Quellcode ist OpenSource auf GitHub unter der MIT Lizenz verfügbar. Die App wurde als Hochschulprojekt mit Hilfe von RStudio und Shiny von Daniel Böhm und ", url_javan, " entwickelt."))
-            #tags$p("Javan Rasokat (79133)"),
-            #tags$p("Daniel Böhm (76477)"),       
-            #img(src="bee_small.jpg", width="200px"),
+            HTML(paste("Die HoneyPi Shiny App dient zur Messdaten-Visualisierung von Bienenstand-Monitoring-Systemen. Der Quellcode ist Open Source auf GitHub unter der MIT Lizenz verfügbar. Die App wurde als Hochschulprojekt mit Hilfe von RStudio und Shiny von Daniel Böhm und ", url_javan, " entwickelt."))
             )
 )
 start <- fluidRow(
   column(4,
          box(
            title = "Datenerhebung", width = NULL, solidHeader = FALSE, status = "warning",
-           "Die bereits vorliegenden Messdaten stammen von einem Bienenstand-Monitoring-System. Dabei messen Sensoren im und am Bienenstand Umwelteinflüsse, wie die Temperatur, die Luftfeuchtigkeit und das Gewicht des Bienenstands. Dieses Monitoring System ist modular, sodass weitere Sensorenarten wie Luftdruck, Regenmenge und Luftqualität ergänzt werden können. Eine weitere Ergänzung wäre beispielsweise das hinzufügen weiterer Temperatursensoren innerhalb jeder Wabengasse um die Bewegung der Wintertraube im Bienenstand zu erfassen. Die Messungen finden kontinuierlich, beispielsweise in einem Zyklus von alle 30 Minuten statt."
+           "Die bereits vorliegenden Messdaten stammen von einem Bienenstand-Monitoring-System. Dabei messen Sensoren im und am Bienenstand Umwelteinflüsse, wie die Temperatur, die Luftfeuchtigkeit und das Gewicht des Bienenstands. Dieses Monitoring-System ist modular, sodass weitere Sensorenarten wie Luftdruck, Regenmenge und Luftqualität ergänzt werden können. Eine weitere Ergänzung wäre beispielsweise das Hinzufügen weiterer Temperatursensoren innerhalb jeder Wabengasse um die Bewegung der Wintertraube im Bienenstand zu erfassen. Die Messungen finden kontinuierlich, beispielsweise in einem Zyklus von 30 Minuten statt."
          )
   ),
   column(4,
@@ -89,13 +86,13 @@ start <- fluidRow(
            HTML(
 "<strong>Beschreibung der Merkmale</strong>
 <ul>
-<li><strong>timestamp</strong>: <i>nicht häufbar, diskret, nicht-klassiert, quantitaves Merkmal [Zeitstempel] </i> <br>- Uhrzeit zum Zeitpunkt der Messung</li>
-<li><strong>weight</strong>: <i>metrisch, stetig, quantiatives Merkmal [kg] </i> <br>- gemessenes Gewicht des Bienenstandes</li>
-<li><strong>temp_hive</strong>: <i>metrisch, stetig, quantiatives Merkmal [°C] </i> <br>- gemessene Stocktemperatur im Bienenstock</li>
-<li><strong>temp_out</strong>: <i>metrisch, stetig, quantiatives Merkmal [°C] </i> <br>- gemessene Außentemperatur am Bienenstand</li>
-<li><strong>hum_hive</strong>: <i>metrisch, stetig, quantiatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit im Bienenstock</li>
-<li><strong>hum_out</strong>: <i>metrisch, stetig, quantiatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit am Bienenstande</li>
-<li><strong>delta_weight</strong>: <i>metrisch, quantiatives Merkmal [g] </i> <br>- Gewichtsdifferenz zum vorangegangenen Messergebnis</li>
+<li><strong>timestamp</strong>: <i>nicht häufbar, diskret, nicht-klassiert, quantitatives Merkmal [Zeitstempel] </i> <br>- Uhrzeit zum Zeitpunkt der Messung</li>
+<li><strong>weight</strong>: <i>metrisch, stetig, quantitatives Merkmal [kg] </i> <br>- gemessenes Gewicht des Bienenstandes</li>
+<li><strong>temp_hive</strong>: <i>metrisch, stetig, quantitatives Merkmal [°C] </i> <br>- gemessene Stocktemperatur im Bienenstock</li>
+<li><strong>temp_out</strong>: <i>metrisch, stetig, quantitatives Merkmal [°C] </i> <br>- gemessene Außentemperatur am Bienenstand</li>
+<li><strong>hum_hive</strong>: <i>metrisch, stetig, quantitatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit im Bienenstock</li>
+<li><strong>hum_out</strong>: <i>metrisch, stetig, quantitatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit am Bienenstand</li>
+<li><strong>delta_weight</strong>: <i>metrisch, quantitatives Merkmal [g] </i> <br>- Gewichtsdifferenz zum vorangegangenen Messergebnis</li>
 </ul>"
            )
          )
