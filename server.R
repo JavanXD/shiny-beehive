@@ -101,8 +101,7 @@ server <- function(input, output, session) {
       #                        header = input$fileuploadHeader,
       #                        sep = input$fileuploadSep)
       beehive_df_unfiltered <<- read_csv(input$fileuploadFile$datapath, col_types = cols(unixtime = col_number(), 
-                                                                             timestamp = col_datetime(format = format), 
-                                                                             x1 = col_skip()))
+                                                                             timestamp = col_datetime(format = format)))
       beehive_df <- beehive_df_unfiltered
                              
     } else {
@@ -364,13 +363,21 @@ server <- function(input, output, session) {
     
     
     # draw boxplot
-    p <- plot_ly(alpha = 0.4, type = "histogram", autobinx = F, xbins = 25, autobiny = F, ybins = 25) %>%
-      add_histogram(x = ~beehive_df_weight1$delta_weight, name= "Zeitraum #1", autobinx = F, xbins = 25, autobiny = F, ybins = 25) %>%
-      add_histogram(x = ~beehive_df_weight2$delta_weight, name=  "Zeitraum #2", autobinx = F, xbins = 25, autobiny = F, ybins = 25) %>%
-      layout(barmode = "overlay") %>% 
-      layout(xaxis = list(title = "Gewichtsdifferenz [g]"), yaxis = list(title = "Anzahl")) %>% 
-      layout(xaxis = list(range = c(-150, 150))) # by default zoom in
-    
+    p <- plot_ly(alpha = 0.4, 
+                 type = "histogram", 
+                 nbinsx = 50,
+                 nbinsy = 50,
+                 autobinx = FALSE,
+                 xbins = list(size=20), 
+                 autobiny = FALSE, 
+                 ybins = list(size=20)) %>%
+      add_histogram(x = ~beehive_df_weight1$delta_weight, name= "Zeitraum #1") %>%
+      add_histogram(x = ~beehive_df_weight2$delta_weight, name=  "Zeitraum #2") %>%
+      layout(barmode = "overlay",
+             xaxis = list(title = "Gewichtsdifferenz [g]",
+                          range = c(-150, 150)), # zoom in
+             yaxis = list(title = "Anzahl"))
+
   })
   
   output$gewichtsDeltasDailyPlot <- renderPlotly({
@@ -391,7 +398,10 @@ server <- function(input, output, session) {
     y <- beehive_df_daily$weight_sum
     p <- plot_ly(beehive_df_daily, x = ~x, y = ~y, type = 'bar', color = I("orange")) %>%
       layout(title = "",
-             xaxis = list(title = "", type="date", tickmode="linear", tickangle=45),
+             xaxis = list(title = "", 
+                          type="date", 
+                          #tickmode="linear", # show every date
+                          tickangle=45),
              yaxis = list(title = "Gewichtsveränderung [g]",
                           range = c(-3000, 3000))
              )
@@ -616,7 +626,7 @@ server <- function(input, output, session) {
       paste('data-', Sys.Date(), '.csv', sep='')
     },
     content = function(con) {
-      write.csv2(beehive_df, con, sep = ",", quote = FALSE)
+      write.table(beehive_df, con, sep = ",", dec=".", na="", quote = FALSE)
     },
     contentType = "text/csv"
   )
