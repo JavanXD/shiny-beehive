@@ -78,23 +78,24 @@ server <- function(input, output, session) {
   output$spearmanPlot <- renderPlot({
     x <- beehive_df[[input$selectedFieldSpearmanX]]
     y <- beehive_df[[input$selectedFieldSpearmanY]]
-    #x<- beehive_df$weight
-    #y<- beehive_df$temp_out
+
+    output$calccor <- renderPrint({
+      cor.test(x,y,method="spearman")
+    })
     
     # draw plot
     ggplot(beehive_df, aes(x = x, y = y)) + geom_point() + geom_smooth(method='lm') +
-      labs(title = "Vorlage GEOM Daniel", 
-           subtitle = "Erster Versuch", 
-           x = "Merkmal X", y = "Merkmal Y"
-      )
+      labs(x = "Merkmal X", y = "Merkmal Y")
   })
+  
   output$spearmanUI <- renderUI({
     tags$div(
       br(),
+      tags$h3("Spearman Korrelationskoeffizient"),
       selectField(id="selectedFieldSpearmanX", val="temp_out", text="Merkmal für x-Achse"),
       selectField(id="selectedFieldSpearmanY", val="weight", text="Merkmal für y-Achse"),
-      tags$h3("tbd"),
-      p("tbd"),
+      verbatimTextOutput("calccor"),
+      p("Der Spearman Korrelationskoeffizient wurde gewählt, um die Auswertung nicht anfällig für Ausreißer in den Daten zu machen"),
       plotOutput("spearmanPlot")
       )
   })
@@ -113,9 +114,8 @@ server <- function(input, output, session) {
   output$corUI <- renderUI({
     tags$div(
       br(),
-      tags$h3("tbd"),
-      plotOutput("corPlot"),
-      p("tbd")
+      tags$h3("Korrelationsmatrix"),
+      plotOutput("corPlot")
     )
   })
   
