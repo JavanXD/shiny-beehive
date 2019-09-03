@@ -83,6 +83,10 @@ server <- function(input, output, session) {
       cor.test(x,y,method="spearman")
     })
     
+    output$calcpearson <- renderPrint({
+      cor.test(x,y,method="pearson")
+    })
+    
     # draw plot
     ggplot(beehive_df, aes(x = x, y = y)) + geom_point() + geom_smooth(method='lm') +
       labs(x = "Merkmal X", y = "Merkmal Y")
@@ -95,6 +99,7 @@ server <- function(input, output, session) {
       selectField(id="selectedFieldSpearmanX", val="temp_out", text="Merkmal für x-Achse"),
       selectField(id="selectedFieldSpearmanY", val="weight", text="Merkmal für y-Achse"),
       verbatimTextOutput("calccor"),
+      verbatimTextOutput("calcpearson"),
       p("Der Spearman Korrelationskoeffizient wurde gewählt, um die Auswertung nicht anfällig für Ausreißer in den Daten zu machen"),
       plotOutput("spearmanPlot")
       )
