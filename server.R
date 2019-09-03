@@ -88,7 +88,7 @@ server <- function(input, output, session) {
     })
     
     # draw plot
-    ggplot(beehive_df, aes(x = x, y = y)) + geom_point() + geom_smooth(method='lm') +
+    ggplot(beehive_df, aes(x = x, y = y)) + geom_point() + geom_smooth(se = FALSE, method='lm') +
       labs(x = "Merkmal X", y = "Merkmal Y")
   })
   
