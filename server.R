@@ -73,41 +73,28 @@ server <- function(input, output, session) {
   #View(beehive_df)
 
   ########################################
-  # Tab Spearman berechnen via Spearman
+  # Tab Korrelation
   ########################################
+  
+  # Korrelation mit Selectfeldern nach Spearman + Textoutput Pearson und Spearman
   output$spearmanPlot <- renderPlot({
     x <- beehive_df[[input$selectedFieldSpearmanX]]
     y <- beehive_df[[input$selectedFieldSpearmanY]]
 
-    output$calccor <- renderPrint({
-      cor.test(x,y,method="spearman")
-    })
+  output$calccor <- renderPrint({
+    cor.test(x,y,method="spearman")
+  })
     
-    output$calcpearson <- renderPrint({
-      cor.test(x,y,method="pearson")
-    })
+  output$calcpearson <- renderPrint({
+    cor.test(x,y,method="pearson")
+  })
     
-    # draw plot
+  # draw plot
     ggplot(beehive_df, aes(x = x, y = y)) + geom_point() + geom_smooth(se = FALSE, method='lm') +
     labs(x = toString(input$selectedFieldSpearmanX), y = toString(input$selectedFieldSpearmanY))
   })
   
-  output$spearmanUI <- renderUI({
-    tags$div(
-      br(),
-      tags$h3("Spearman Korrelationskoeffizient"),
-      selectField(id="selectedFieldSpearmanX", val="temp_out", text="Merkmal für x-Achse"),
-      selectField(id="selectedFieldSpearmanY", val="weight", text="Merkmal für y-Achse"),
-      verbatimTextOutput("calccor"),
-      verbatimTextOutput("calcpearson"),
-      p("Der Spearman Korrelationskoeffizient wurde gewählt, um die Auswertung nicht anfällig für Ausreißer in den Daten zu machen"),
-      plotOutput("spearmanPlot")
-      )
-  })
-
-  ########################################
-  # Tab Korrelation berechnen via Spearman
-  ########################################
+  #Korrelationsmatrix berechnen
   output$corPlot <- renderPlot({
     # Korrelation berechnen
     corrdataframe <- cor(beehive_df[,c("weight", "temp_hive", "temp_out", "hum_hive", "hum_out", "delta_weight", "delta_temp_hive", "delta_temp_out", "delta_hum_hive", "delta_hum_out")])
@@ -116,11 +103,33 @@ server <- function(input, output, session) {
     # draw plot
     corrplot(corspearman, method = "ellipse", type = "upper", tl.srt = 45)
   })
-  output$corUI <- renderUI({
+  
+  output$spearmanUI <- renderUI({
     tags$div(
       br(),
       tags$h3("Korrelationsmatrix"),
-      plotOutput("corPlot")
+      plotOutput("corPlot"),
+      br(),
+      p("Um eine Übersicht der Korrelationen zu bekommen erstellen wir eine Korrelationsmatrix. Diese gibt uns einen Überblick, ob zwischen zwei Merkmalen eine positive (blau bzw. Wert gegen 1), keine (weiß bzw. Wert gegen 0) oder eine negative (rot bzw. Wert gegen -1) Korrelation vorliegt. Der genaue Korrelationskoeffizient kann untenstehend, durch die Auswahl in den Select-Boxen, berechnet werden."),
+      br(),
+      tags$h3("Spearman Korrelationskoeffizient"),
+      p("Für den untenstehenden Plot wurde die Visualisierung des Spearman Korrelationskoeffizient gewählt. Grund dafür war, die Auswertung nicht anfällig für (extreme) Ausreißer in den verwendeten Basis-Daten zu machen. Die Ausreißer können vorkommen, wenn beispielsweise die Waage am Bienenstock nicht richtig funktioniert oder der Imker Arbeiten am Bienenstock durchführt und es zu extremen Messungen kommt. Alternativ hätten auch systematisch die höchsten und niedriegsten Werte aus dem Datensatz entfernt werden können (via Winsorizing). Zusätzlich wurde der Pearson Korrelationskoeffizient mitausgegeben um die Unterschiede beider Korrelationskoeffizienten aufzuzeigen. Bei einem Wert von + 1  (bzw. − 1) besteht ein vollständig positiver (bzw. negativer) linearer Zusammenhang zwischen den betrachteten Merkmalen. Wenn der Korrelationskoeffizient den Wert 0 aufweist, hängen die beiden Merkmale überhaupt nicht linear voneinander ab. Es kann sich dabei jedoch um Scheinkorrelationen handeln!"),
+      selectField(id="selectedFieldSpearmanX", val="temp_out", text="Merkmal für x-Achse"),
+      selectField(id="selectedFieldSpearmanY", val="weight", text="Merkmal für y-Achse"),
+      verbatimTextOutput("calccor"),
+      verbatimTextOutput("calcpearson"),
+      plotOutput("spearmanPlot")
+      )
+  })
+  
+ 
+  ########################################
+  # Tab Kruskal-Wallis
+  ########################################
+  output$corUI <- renderUI({
+    tags$div(
+      br(),
+      tags$h3("Kruskal-Wallis")
     )
   })
   
