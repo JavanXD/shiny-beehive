@@ -1,2 +1,2 @@
 # shiny-beehive
- R Shiny app to visualize beehive csv logs. 
+ R Shiny app to visualize beehive measurement data.
