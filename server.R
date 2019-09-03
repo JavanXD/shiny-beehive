@@ -59,7 +59,7 @@ server <- function(input, output, session) {
   ########################################
   # Skripte Testen
   ########################################
-  # Gruppiere Daten nach Tag und füge Min Max pro Tag hinzu ----
+  # Gruppiere Daten nach Tag und füge Min Max pro Tag hinzu
   beehive_df_daily <- beehive_df %>%
     mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), month = format(timestamp, "%m"), year = format(timestamp, "%Y")) %>% 
     group_by(dt, month, year) %>% 
@@ -75,30 +75,48 @@ server <- function(input, output, session) {
   ########################################
   # Tab Spearman berechnen via Spearman
   ########################################
-  # Daniel erster Versuch. Zusammenhang nicht gut
-  spearman = ggplot(beehive_df, aes(x = temp_out, y = weight)) + geom_point() + geom_smooth(method='lm') +
-    labs(title = "Vorlage GEOM Daniel", 
-         subtitle = "Erster Versuch", 
-         x = "Außentemperatur in Celsius", y = "Gewicht"
-    )
-  
-  output$spearman <- renderPlot({
-    spearman
+  output$spearmanPlot <- renderPlot({
+    x <- beehive_df[[input$selectedFieldSpearmanX]]
+    y <- beehive_df[[input$selectedFieldSpearmanY]]
+    #x<- beehive_df$weight
+    #y<- beehive_df$temp_out
+    
+    # draw plot
+    ggplot(beehive_df, aes(x = x, y = y)) + geom_point() + geom_smooth(method='lm') +
+      labs(title = "Vorlage GEOM Daniel", 
+           subtitle = "Erster Versuch", 
+           x = "Merkmal X", y = "Merkmal Y"
+      )
+  })
+  output$spearmanUI <- renderUI({
+    tags$div(
+      br(),
+      selectField(id="selectedFieldSpearmanX", val="temp_out", text="Merkmal für x-Achse"),
+      selectField(id="selectedFieldSpearmanY", val="weight", text="Merkmal für y-Achse"),
+      tags$h3("tbd"),
+      p("tbd"),
+      plotOutput("spearmanPlot")
+      )
   })
 
   ########################################
   # Tab Korrelation berechnen via Spearman
   ########################################
-  plotCor <- reactive({
+  output$corPlot <- renderPlot({
     # Korrelation berechnen
     corrdataframe <- cor(beehive_df[,c("weight", "temp_hive", "temp_out", "hum_hive", "hum_out", "delta_weight", "delta_temp_hive", "delta_temp_out", "delta_hum_hive", "delta_hum_out")])
     # Korrelation visualisieren
     corspearman <- cor(corrdataframe, use="complete.obs", method="spearman") 
+    # draw plot
     corrplot(corspearman, method = "ellipse", type = "upper", tl.srt = 45)
   })
-  
-  output$cor <- renderPlot({
-    plotCor()
+  output$corUI <- renderUI({
+    tags$div(
+      br(),
+      tags$h3("tbd"),
+      plotOutput("corPlot"),
+      p("tbd")
+    )
   })
   
   ########################################
@@ -454,10 +472,10 @@ server <- function(input, output, session) {
     #View(beehive_df_hourly2)
     
     # merge dataframes into one
-    final_df <- merge(beehive_df_hourly1[0:24,c(1,5)],beehive_df_hourly2[0:24,c(1,5)], all.x = TRUE,all.y = TRUE, by.y="hour")
-    final_df <- merge(final_df,beehive_df_hourly3[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
-    final_df <- merge(final_df,beehive_df_hourly4[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
-    final_df <- merge(final_df,beehive_df_hourly5[0:24,c(1,5)],all.x = TRUE,all.y = TRUE, by.y="hour")
+    final_df <- merge(beehive_df_hourly1[0:24,c("hour", "weight1")],beehive_df_hourly2[0:24,c("hour", "weight2")], all.x = TRUE,all.y = TRUE, by.y="hour")
+    final_df <- merge(final_df,beehive_df_hourly3[0:24,c("hour", "weight3")],all.x = TRUE,all.y = TRUE, by.y="hour")
+    final_df <- merge(final_df,beehive_df_hourly4[0:24,c("hour", "weight4")],all.x = TRUE,all.y = TRUE, by.y="hour")
+    final_df <- merge(final_df,beehive_df_hourly5[0:24,c("hour", "weight5")],all.x = TRUE,all.y = TRUE, by.y="hour")
     #View(final_df)
     
     pal <- c("#4B0082", "#800080", "darkorchid", "blueviolet", "mediumorchid", "magenta")

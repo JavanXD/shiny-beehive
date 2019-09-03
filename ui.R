@@ -16,8 +16,8 @@ library(DT)
 dashboard <- tabBox(title = NULL, width = 12, 
              tabPanel("Wertebereich bestimmen", icon = icon("database"), uiOutput("summaryUI")),
              tabPanel("Merkmal Visualisierung", icon = icon("chart-bar"), uiOutput("histogramUI")),
-             tabPanel("Korrelation", icon = icon("project-diagram"), plotOutput("cor")),
-             tabPanel("Spearman", icon = icon("project-diagram"), plotOutput("spearman")),
+             tabPanel("Korrelation", icon = icon("project-diagram"), uiOutput("corUI")),
+             tabPanel("Spearman", icon = icon("project-diagram"), uiOutput("spearmanUI")),
              tabPanel("Jahresverlauf Gewicht (Boxplots)", icon = icon("calendar"), uiOutput("monthlyBoxplotUI")),
              tabPanel("Tagesverlauf Gewicht (Boxplots)", icon = icon("calendar"), uiOutput("dailyBoxplotUI")),
              tabPanel("Zeitstrahl", icon = icon("chart-line"), uiOutput("zeitstrahlUI")),
@@ -87,11 +87,11 @@ start <- fluidRow(
 "<strong>Beschreibung der Merkmale</strong>
 <ul>
 <li><strong>timestamp</strong>: <i>nicht häufbar, diskret, nicht-klassiert, quantitatives Merkmal [Zeitstempel] </i> <br>- Uhrzeit zum Zeitpunkt der Messung</li>
-<li><strong>weight</strong>: <i>metrisch, stetig, quantitatives Merkmal [kg] </i> <br>- gemessenes Gewicht des Bienenstandes</li>
 <li><strong>temp_hive</strong>: <i>metrisch, stetig, quantitatives Merkmal [°C] </i> <br>- gemessene Stocktemperatur im Bienenstock</li>
 <li><strong>temp_out</strong>: <i>metrisch, stetig, quantitatives Merkmal [°C] </i> <br>- gemessene Außentemperatur am Bienenstand</li>
 <li><strong>hum_hive</strong>: <i>metrisch, stetig, quantitatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit im Bienenstock</li>
 <li><strong>hum_out</strong>: <i>metrisch, stetig, quantitatives Merkmal [%] </i> <br>- gemessene Luftfeuchtigkeit am Bienenstand</li>
+<li><strong>weight</strong>: <i>metrisch, stetig, quantitatives Merkmal [kg] </i> <br>- gemessenes Gewicht des Bienenstandes</li>
 <li><strong>delta_weight</strong>: <i>metrisch, quantitatives Merkmal [g] </i> <br>- Gewichtsdifferenz zum vorangegangenen Messergebnis</li>
 </ul>"
            )
