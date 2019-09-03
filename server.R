@@ -628,10 +628,11 @@ server <- function(input, output, session) {
   # Download Funktionalität 
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste('data-', Sys.Date(), '.csv', sep='')
+      paste('beehive-', Sys.Date(), '.csv', sep='')
     },
     content = function(con) {
-      write.table(beehive_df, con, sep = ",", dec=".", na="", quote = FALSE)
+      fixdateformat <- transform(beehive_df, timestamp = format(timestamp, format)) # turn 2018-04-05 08:15:45 into 2018/04/05 08:15:45
+      write.table(fixdateformat, con, sep = ",", dec=".", na="", quote = FALSE,row.names=F, col.names=T)
     },
     contentType = "text/csv"
   )
