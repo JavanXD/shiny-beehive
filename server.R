@@ -275,7 +275,7 @@ server <- function(input, output, session) {
     time_series <- beehive_df$weight
     
     # plot the raw data
-    raw_plot <- as.ggplot(function()  plot(time_series) +
+    raw_plot <- as.ggplot(function()  plot(time_series, main="Raw Gewichtsmessungen", xlab="Index der Messung", ylab="Gewicht [kg]") +
                             abline(reg=lm(time_series~time(time_series)))) # fit a trend line
     
     # Grafische Analyse der Zeitreihe
@@ -290,13 +290,13 @@ server <- function(input, output, session) {
     # Expotentielles Glätten
     hw_plot <- as.ggplot(function() {
       time_series_vorhersage <- HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
-      plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5")
+      plot(time_series_vorhersage, main = "Holt-Winters-Glättung", sub = "Exponetielles Glätten: alpha = 0.5 beta = 0.5", xlab ="Index")
     })
     
     # HoltWInters forecast
     m <- stats::HoltWinters(time_series, alpha = 0.5, beta = 0.5, gamma = F)
     forecast_data <- forecast(m, h=14)
-    forecast_plot <- as.ggplot(function()  plot(forecast_data))
+    forecast_plot <- as.ggplot(function()  plot(forecast_data, main = "HoltWinters Prognose", xlab="Index", ylab="Gewicht [kg]"))
     
     
     #  Für weitere EDA untersuchen wir Zyklen über Tage hinweg:
