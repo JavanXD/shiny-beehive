@@ -219,7 +219,7 @@ server <- function(input, output, session) {
       verbatimTextOutput("kruskalTest"),
       p("Wir wissen nun durch den p-Wert von 0.00000000000000022, dass es signifikante Unterschiede gibt. Um herauszufinden welche der Gruppen unterschiedlich sind, wenden wir den Wilcoxon Rank Sum Test an."),
       verbatimTextOutput("kruskalComparison"),
-      p("Dieser gibt uns aus, dass es ")
+      p("Der Test zeigt uns, dass es nur zwischen warm und eiskalt, sowie kalt und eiskalt einen signifikanten Unterschied gibt (p < 0.05).")
     )
   })
   
