@@ -211,12 +211,15 @@ server <- function(input, output, session) {
     tags$div(
       br(),
       tags$h3("Kruskal-Wallis"),
+      p("Um Herauszufinden, ob es zwischen verschiedenen Temperaturzonen und dem Gewicht einen Zusammenhang gibt, wurde der Kruskal-Wallis Test eingesetzt. Die Temperatur wurde in vier Temperaturzonen eingeteilt. Die Einteilung lautet, heiss bei >= 40 Grad, warm bei < 40 und >= 25 Grad, kalt bei < 25 und >= 10 Grad und eiskalt bei allen Werten < 10 Grad."),
       verbatimTextOutput("kruskalDf"),
       plotOutput("kruskalBoxplot"),
       plotOutput("kruskalMean"),
+      p("Um herauszufinden ob es einen signifikanten Unterschied zwischen dem Durchschnittsgewicht je Temperaturzone gibt, setzen wir den Kruskal-Wallis Test ein."),
       verbatimTextOutput("kruskalTest"),
+      p("Wir wissen nun durch den p-Wert von 0.00000000000000022, dass es signifikante Unterschiede gibt. Um herauszufinden welche der Gruppen unterschiedlich sind, wenden wir den Wilcoxon Rank Sum Test an."),
       verbatimTextOutput("kruskalComparison"),
-      p("test")
+      p("Dieser gibt uns aus, dass es ")
     )
   })
   
