@@ -48,7 +48,7 @@ controlls <- tags$div(
         # DateRange
         dateRangeInput("daterange", 
                        "Zeitspanne auswählen:",
-                       start  = "2018-01-01",
+                       start  = "2018-04-01",
                        end    = "2019-07-01",
                        min    = "2016-01-01",
                        max    = "2024-12-31",

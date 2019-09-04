@@ -579,8 +579,7 @@ server <- function(input, output, session) {
     final_df <- merge(final_df,beehive_df_hourly5[0:24,c("hour", "weight5")],all.x = TRUE,all.y = TRUE, by.y="hour")
     #View(final_df)
     
-    pal <- c("#4B0082", "#800080", "darkorchid", "blueviolet", "mediumorchid", "magenta")
-    plot_ly(final_df, x = ~hour, y = ~weight1, name = 'vor 1 Tag', type = 'scatter', mode = 'lines+markers', colors = pal) %>%
+    plot_ly(final_df, x = ~hour, y = ~weight1, name = 'vor 1 Tag', type = 'scatter', mode = 'lines+markers') %>%
       add_trace(x = ~hour, y = ~weight2, name = 'vor 2 Tagen', mode = 'lines+markers') %>%
       add_trace(x = ~hour, y = ~weight3, name = 'vor 3 Tagen', mode = 'lines+markers') %>%
       add_trace(x = ~hour, y = ~weight4, name = 'vor 4 Tagen', mode = 'lines+markers')  %>%
@@ -636,58 +635,82 @@ server <- function(input, output, session) {
 
   output$highchartPlot <- renderHighchart({
     
+    date_start <- as.Date("2019-05-01")
+    beehive_df <- subset(beehive_df, timestamp >= date_start)
+    
     #beehive_df[1] <- NULL # remove first clumn
     #beehive_df <- beehive_df[, c(7,1,2,3,4,5,6)] # reorder columns
     # create unix timestamp from date
     #beehive_df$Date <- as.POSIXct(strptime(beehive_df$timestamp,format),tz="UTC")
-
-    # Test Dataframe
-    df2 <- data_frame(
-      #date = c(1460648544, 1460574864, 1460665314),
-      date = c(as.Date("2018-04-05 08:00:45"), as.Date("2018-05-05 08:00:45"), as.Date("2018-06-05 08:00:45")),
-      value = c(4, 4, 4.2),
-      variable = c(1, 2, 3)
-    )
     # convert unix to date
     #df2 <- mutate(df2, date=as.POSIXct(as.numeric(as.character(date)),origin="1970-01-01"))
+    
     # convert data frame to ts
-    #xts2 <- xts(df2[,-1], order.by=df2$date)
     xts <- xts(beehive_df[,-1], order.by=beehive_df$timestamp)
 
     # draw chart
     hc <- highchart(type = "stock") %>% 
-      # create y-Axis
-      # hc_yAxis_multiples(
-      #   list(title = list(text = "Messdaten"), lineWidth = 3),
-      #   list(title = list(text = "Gewichtsdifferenz"), showLastLabel = FALSE, opposite = TRUE)
-      # ) %>% 
-      #hc_yAxis_multiples(
-      #  create_yaxis(1, height = c(2, 1), turnopposite = TRUE)
-      #) %>% 
-      hc_yAxis(max = 120, min = -15, opposite = TRUE) %>% 
+      hc_chart(animation = TRUE) %>% 
+      hc_title(text = "Stockwaage") %>% 
+      hc_xAxis(#tickInterval=4,
+               #tickInterval=4,
+               type='datetime', 
+               labels=list(rotation=45)
+               ) %>%
+      hc_yAxis_multiples(
+        list(
+          title = list(text = paste0('Messdaten [°C] [%] [kg]')),
+          showFirstLabel = TRUE,
+          showLastLabel = TRUE,
+          opposite = TRUE,
+          reversed = FALSE,
+          softMax = 120, 
+          softMin = -15,
+          tickPixelInterval = 25
+        ),
+        list(
+          title = list(text = "Gewichtsdifferenz [g]"),
+          showFirstLabel = TRUE,
+          showLastLabel = TRUE,
+          opposite = FALSE,
+          reversed = FALSE,
+          softMax = 2000, 
+          softMin = -2000,
+          tickPixelInterval = 50,
+          step = 200
+          
+        )
+      ) %>%
       # add series for Axis 0
-      hc_add_series(data=xts$temp_hive, name = "Stocktemperatur [°C]", type = "line") %>% 
-      hc_add_series(data=xts$temp_out, name = "Temperatur Außen [°C]", type = "line") %>% 
-      hc_add_series(data=xts$weight, name = "Gewicht [kg]", type = "line", color = hex_to_rgba("black", 0.7)) %>% 
-      hc_add_series(data=xts$hum_hive, name = "Luftfeuchte Innen [%]", type = "line") %>% 
-      hc_add_series(data=xts$hum_out, name = "Luftfeuchte Außen [%]", type = "line")
+      hc_add_series(data=xts$temp_hive, yAxis = 0, name = "Stocktemperatur [°C]", type = "line") %>% 
+      hc_add_series(data=xts$temp_out, yAxis = 0, name = "Temperatur Außen [°C]", type = "line") %>% 
+      hc_add_series(data=xts$weight, yAxis = 0, name = "Gewicht [kg]", type = "line", color = hex_to_rgba("black", 0.7)) %>% 
+      hc_add_series(data=xts$hum_hive, yAxis = 0, name = "Luftfeuchte Innen [%]", type = "line") %>% 
+      hc_add_series(data=xts$hum_out, yAxis = 0, name = "Luftfeuchte Außen [%]", type = "line") %>% 
       # add series for Axis 2  
-      #hc_add_series(data=xts$delta_weight, yAxis = 1, name = "Zuwachs/Abnahme [g]", type = "line", color = hex_to_rgba("grey", 0.7))
+      hc_add_series(data=xts$delta_weight, yAxis = 1, name = "Gewichtsdifferenz [g]", type = "column", color = hex_to_rgba("grey", 0.7))
       # add theme
       hc <- hc %>% hc_add_theme(hc_theme_google())
       # add plot options
       hc <- hc %>% hc_plotOptions(series = list(
-                                     compare = "percent",
+                                     compare = "series",
                                      showInNavigator = TRUE
                                    ))
       # set rangeSelector
       hc <- hc %>% hc_rangeSelector(
           verticalAlign = "bottom",
-          selected = 0 # select month by default
+          selected = 2, # select week by default
+          buttons = list(
+            list(type = 'hour', count = 12, text = '12h'),
+            list(type = 'hour', count = 23, text = '1d'),
+            list(type = 'day', count = 7, text = '7d'),
+            list(type = 'day', count = 14, text = '14d'),
+            list(type = 'day', count = 30, text = '1m'),
+            list(type = 'all', text = 'All'))
         )
       # set tooltip
       hc <- hc %>% hc_tooltip(
-                 pointFormat = '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+                 pointFormat = '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>', # ({point.change}%)
                  valueDecimals = 2,
                  split =  TRUE,
                  crosshairs = TRUE)
@@ -698,9 +721,9 @@ server <- function(input, output, session) {
   })
   output$zeitreiheUI <- renderUI({
     tags$div(
-      highchartOutput("highchartPlot"),
+      highchartOutput("highchartPlot", height = 600),
       br(),
-      HTML('<p>Die Visualisierung erfolgt mit <a href="https://www.highcharts.com/stock/demo/compare/dark-unica" target="_blank" rel="noopener">Highcharts (Highstock)</a>.')
+      HTML('<p>Die Visualisierung erfolgt mit <a href="https://www.highcharts.com/stock/demo/compare/dark-unica" target="_blank" rel="noopener">Highcharts (Highstock)</a>. <i>non-commercial use only.</i>')
     )
   })
   
