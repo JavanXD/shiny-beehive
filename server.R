@@ -15,6 +15,9 @@ library(ggplotify)
 library(highcharter)
 library(xts)
 
+# Kruskal-Wallis
+library(ggpubr)
+
 server <- function(input, output, session) {
   
   ########################################
@@ -126,10 +129,94 @@ server <- function(input, output, session) {
   ########################################
   # Tab Kruskal-Wallis
   ########################################
+  calc_group <- function (col) {
+    col <- as.numeric(col)
+    sapply(col, function(col){
+      if(col >= 40){
+        return("heiß") 
+      }else if(col >= 25){
+        return("warm") 
+      }else if(col >= 10){
+        return("kalt") 
+      }else{
+        return("eiskalt") 
+      }
+    })
+  }
+  
+  tempLevels <- c("heiß", "warm", "kalt", "eiskalt")
+  
+  kruskal_wallis <- reactive({
+    # Bilde Gruppen
+    beehive_df_kruskal <- beehive_df %>%
+      mutate(group = calc_group(temp_out), temp_out = temp_out)
+    
+    # Reorder
+    beehive_df_kruskal$group <- ordered(beehive_df_kruskal$group,
+                                        levels = tempLevels)
+    
+    # Gruppiere
+    beehive_df_kruskal_visualized <- group_by(beehive_df_kruskal, group) %>% 
+      summarise(
+        count = n(),
+        mean = mean(weight, na.rm = TRUE),
+        sd = sd(weight, na.rm = TRUE),
+        median = median(weight, na.rm = TRUE),
+        IQR = IQR(weight, na.rm = TRUE)
+      )
+    
+    output$kruskalDf <- renderPrint({
+      beehive_df_kruskal_visualized
+    })
+    
+    # Box plots
+    # ++++++++++++++++++++
+    # Plot weight by group and color by group
+    output$kruskalBoxplot <- renderPlot({
+      ggboxplot(beehive_df_kruskal, x = "group", y = "weight", 
+                color = "group", palette = c("#00AFBB", "#E7B800", "#FC4E07", "#313131"),
+                order = tempLevels,
+                ylab = "Gewicht [kg]", xlab = "Temperaturempfinden")
+    })
+
+    
+    # Mean plots
+    # ++++++++++++++++++++
+    # Plot weight by group
+    # Add error bars: mean_se
+    # (other values include: mean_sd, mean_ci, median_iqr, ....)
+    output$kruskalMean <- renderPlot({
+      ggline(beehive_df_kruskal, x = "group", y = "weight", 
+             add = c("mean_se", "jitter"), 
+             order = tempLevels,
+             ylab = "Gewicht [kg]", xlab = "Temperaturempfinden")
+    })
+
+    
+    # We want to know if there is any significant difference between the average weights of plants in the 3 experimental conditions.
+    output$kruskalTest <- renderPrint({
+      kruskal.test(weight ~ group, data = beehive_df_kruskal)
+    })
+    
+    # From the output of the Kruskal-Wallis test, we know that there is a significant difference between groups, but we don’t know which pairs of groups are different.
+    output$kruskalComparison <- renderPrint({
+      pairwise.wilcox.test(beehive_df_kruskal$weight, beehive_df_kruskal$group,
+                           p.adjust.method = "BH")
+    })
+    
+  })
+  
   output$corUI <- renderUI({
+    kruskal_wallis()
     tags$div(
       br(),
-      tags$h3("Kruskal-Wallis")
+      tags$h3("Kruskal-Wallis"),
+      verbatimTextOutput("kruskalDf"),
+      plotOutput("kruskalBoxplot"),
+      plotOutput("kruskalMean"),
+      verbatimTextOutput("kruskalTest"),
+      verbatimTextOutput("kruskalComparison"),
+      p("test")
     )
   })
   
