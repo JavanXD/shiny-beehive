@@ -28,15 +28,15 @@ chmod 755 shiny-server.sh
 When this process is done, you can run your ShinyApp in Docker 🎉
 
 ```
-docker run -p 80:80 shiny-beehive
+docker run -p 3838:3838 --name shiny_beehive shiny-beehive
 ```
 
-Now, you can open the app with any browser by visiting `http://localhost:80`
+Now, you can open the app with any browser by visiting `http://localhost:3838`
 
 To save your Docker Image as a tar-archive, you simply type into your terminal:
 
 ```
-docker save -o ./shiny-beehive.tar shiny-beehive
+docker save -o ./shiny_beehive-latest.tar shiny-beehive:latest
 ```
 
 This file can be upload to your Plesk Docker Manager.
