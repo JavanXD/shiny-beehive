@@ -51,10 +51,9 @@ controlls <- tags$div(
   dateRangeInput("daterange",
     "Zeitspanne auswählen:",
     start = "2018-04-01",
-    end = "2019-07-01",
-    min = "2016-01-01",
-    max = "2024-12-31",
-    format = "yy-mm-dd",
+    end = Sys.Date(),
+    min = "2015-01-01",
+    format = "yyyy-mm-dd",
     separator = " bis "
   ),
   # Checkbox
@@ -200,7 +199,7 @@ body <- dashboardBody(tabItems(
         12,
         box(
           title = "Hinweis", width = NULL, solidHeader = FALSE, status = "primary",
-          "Bitte zuerst die Datei hier hochladen, bevor die Graphen aufgerufen werden."
+          'Bitte zuerst die Datei hier im "Messdaten"-Bereich hochladen, bevor die anderen Tabs mit den Graphen aufgerufen werden. Wurden die Tabs bereits aufgerufen können die Graphen derzeit noch nicht mit dem geänderten Datensatz aktualisiert werden.'
         )
       )
     )

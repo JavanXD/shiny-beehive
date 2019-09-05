@@ -250,17 +250,21 @@ server <- function(input, output, session) {
     }
 
     # Filter Daterange ----
-    date_start_date <- as.Date(input$daterange[1], origin = "1970-01-01")
-    date_end_date <- as.Date(input$daterange[2], origin = "1970-01-01")
-    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
+    date_start <- as.Date(input$daterange[1], origin = "1970-01-01")
+    date_end <- as.Date(input$daterange[2], origin = "1970-01-01")
+    beehive_df <- subset(beehive_df, timestamp >= date_start & timestamp <= date_end)
 
     # Filter Datenmengen ----
     if (input$filterhours == TRUE) {
       beehive_df <- beehive_df %>%
-        mutate(Date = ymd_hms(timestamp), dt = as_date(timestamp), hr = hour(timestamp)) %>%
-        group_by(dt, hr) %>%
-        filter(Date == min(Date)) %>%
+        mutate(hDate = ymd_hms(timestamp), hDt = as_date(timestamp), hHr = hour(timestamp)) %>%
+        group_by(hDt, hHr) %>%
+        filter(hDate == min(hDate)) %>%
         ungroup()
+      # remove unnecessary columns
+      beehive_df$hDate <- NULL
+      beehive_df$hDt <- NULL
+      beehive_df$hHr <- NULL
     } else {
       beehive_df <- beehive_df
     }
@@ -273,11 +277,11 @@ server <- function(input, output, session) {
 
     # Filter Zeitraum
     # Abhängig von Konfiguration Zeitraum eingrenzen
-    date_end_date <- as.Date(input$selectedDayZeitreihenanlalyse)
+    date_end <- as.Date(input$selectedDayZeitreihenanlalyse)
     count_days <- input$selectedCountZeitreihenanlalyse
-    date_start_date <- ymd(date_end_date) - days(count_days)
+    date_start <- ymd(date_end) - days(count_days)
 
-    beehive_df <- subset(beehive_df, timestamp >= date_start_date & timestamp <= date_end_date)
+    beehive_df <- subset(beehive_df, timestamp >= date_start & timestamp <= date_end)
 
     # Zeitreihenanalyse ist es hilfreich, den Datensatz in einer R-Variable abzuspeichern
     time_series <- beehive_df$weight
@@ -779,7 +783,7 @@ server <- function(input, output, session) {
   ## observe the resetFilter-Button being pressed
   observeEvent(input$resetFilter, {
     updateCheckboxInput(session, "filterhours", value = F)
-    updateDateRangeInput(session, "daterange", start = "2018-04-01", end = "2019-07-01")
+    updateDateRangeInput(session, "daterange", start = "2018-04-01", end = Sys.Date())
     beehive_df <<- beehive_df_unfiltered
     updateTabsetPanel(session, "inTabset")
     # TODO: redraw/reset outputs

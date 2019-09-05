@@ -5,6 +5,6 @@ account: honeypi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1073630
-bundleId: 2384373
+bundleId: 2387297
 url: https://honeypi.shinyapps.io/shiny-beehive/
-when: 1567601631.75454
+when: 1567672072.51379
