@@ -34,8 +34,8 @@ server <- function(input, output, session) {
   beehive_df_unfiltered <- beehive_df
 
   treat_df <- function(df) {
-    # TODO: Zeile in Produktion entfernen.
-    df <- subset(df, hum_hive != 100)
+    # TODO: Filterung verbessern ohne andere Spalten wegzuwerfen
+    # Filterung wird benötigt um NAs rauszufiltern
     df <- subset(df, !is.na(hum_hive))
     df <- subset(df, !is.na(hum_out))
     df <- subset(df, !is.na(weight))
@@ -620,7 +620,7 @@ server <- function(input, output, session) {
       br(),
       selectDay(id = "selectedDayGewichtsDeltas", val = "2019-06-1", text = "Datum für Zeitraum 1"),
       selectDay(id = "selectedDayGewichtsDeltas2", val = "2019-07-1", text = "Datum für Zeitraum 2"),
-      selectDaysCount(val = 14),
+      selectDaysCount(val = 30),
       h3("Gewichtsveränderungen zweier Zeiträume vergleichen"),
       plotlyOutput("gewichtsDeltas"),
       br(),
@@ -669,7 +669,9 @@ server <- function(input, output, session) {
   })
 
   output$highchartPlot <- renderHighchart({
-    date_start <- as.Date("2019-05-01")
+    
+    # Set Range because graph would be to busy rendering whole year
+    date_start <- last(beehive_df$timestamp[order(beehive_df$timestamp)]) - months(2)
     beehive_df <- subset(beehive_df, timestamp >= date_start)
 
     # beehive_df[1] <- NULL # remove first clumn
