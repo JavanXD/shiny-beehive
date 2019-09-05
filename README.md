@@ -48,6 +48,7 @@ Upload to Docker Hub:
 # Log into the Docker Hub from the command line
 docker login --username=javanxd
 # tag your image
+docker images
 docker tag 3d06871c1017 javanxd/shiny-beehive:firsttry
 # Push your image to the repository you created
 docker push javanxd/shiny-beehive
