@@ -39,7 +39,20 @@ To save your Docker Image as a tar-archive, you simply type into your terminal:
 docker save -o ./shiny_beehive-latest.tar shiny-beehive:latest
 ```
 
-This file can be upload to your Plesk Docker Manager.
+This file can be for example uploaded to your Plesk Onyx Docker Manager.
+
+Upload to Docker Hub:
+
+```
+# Frist create repository at Docker Hub
+# Log into the Docker Hub from the command line
+docker login --username=javanxd
+# tag your image
+docker tag 3d06871c1017 javanxd/shiny-beehive:firsttry
+# Push your image to the repository you created
+docker push javanxd/shiny-beehive
+
+```
 
 ### Helpful links
 
