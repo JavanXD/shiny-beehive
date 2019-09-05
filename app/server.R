@@ -806,3 +806,6 @@ server <- function(input, output, session) {
 # Main
 ########################################
 shinyServer(server)
+
+shinyAppDir("./", options = list())
+
