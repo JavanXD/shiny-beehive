@@ -9,6 +9,14 @@ git clone https://github.com/JavanXD/shiny-beehive shiny-beehive
 cd shiny-beehive
 ```
 
+## Screenshots
+![Screenshot from Shiny App - Zeitreihe](./docs/zeitreihe.gif)
+![Screenshot from Shiny App - Gewichtsanalyse](./docs/gewichtsanalyse.gif)
+![Screenshot from Shiny App - Dashboard](./docs/tabs.gif)
+
+____
+
+
 ## Run Docker
 
 ### Build the docker image
