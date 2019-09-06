@@ -660,8 +660,8 @@ server <- function(input, output, session) {
       plotOutput("plotgraph1"),
       p("Es kann zum Fehler kommen, dass die Zeitreihe keine oder weniger als 2 Perioden hat.
       Dann kann das exponentiellen Glätten unter Verwendung der Holt-Winters-Funktion angewandt werden.
-      Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig: 
-      Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen? 
+      Die Idee, die hinter der exponentiellen Glättung steht, ist besonders für ökonomische Zeitreihen einsichtig:
+      Ist es  sinnvoll, allen Beobachtungen der Zeitreihe das gleiche Gewicht einzuräumen, oder ist es sinnvoller jüngeren Beobachtungen mehr Gewicht als älteren Bobachtungen einzuräumen?
       Wir wollen für unsere Zeitreihe diese Methodik des exponentiellen Glätten anschauen.
       "),
       plotOutput("plotgraph2"),
@@ -673,7 +673,7 @@ server <- function(input, output, session) {
   })
 
   output$highchartPlot <- renderHighchart({
-    
+
     # Set Range because graph would be to busy rendering whole year
     date_start <- last(beehive_df$timestamp[order(beehive_df$timestamp)]) - months(2)
     beehive_df <- subset(beehive_df, timestamp >= date_start)
@@ -806,6 +806,3 @@ server <- function(input, output, session) {
 # Main
 ########################################
 shinyServer(server)
-
-shinyAppDir("./", options = list())
-
