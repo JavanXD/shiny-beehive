@@ -2,6 +2,9 @@
 
 R Shiny app to visualize beehive measurement data.
 
+* Demo 1: https://honeypi.shinyapps.io/shiny-beehive/
+* Demo 2: https://shiny.honeypi.de/
+
 ### Checkout latest code
 
 ```
