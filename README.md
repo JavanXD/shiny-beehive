@@ -70,3 +70,19 @@ docker push javanxd/shiny-beehive
 
 * Pushing new Docker image to Docker Hub: https://ropenscilabs.github.io/r-docker-tutorial/04-Dockerhub.html
 * Transfer ShinyApp Docker image as TAR-File: https://www.bjoern-hartmann.de/post/learn-how-to-dockerize-a-shinyapp-in-7-steps/
+
+## Nginx config 
+After moving cloudflare proxy in front the websocket connection received a 400 Bad Request. Deploying the following rules worked:
+
+```
+location ^~ /__sockjs__/ {
+
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection "upgrade";
+	proxy_set_header Host $http_host;
+	proxy_set_header X-Real-IP $remote_addr;
+	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+	proxy_pass http://localhost:32769;
+}
+```
